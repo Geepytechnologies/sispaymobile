@@ -89,7 +89,7 @@ class BillPaymentService {
     try {
       const response = await axiosInstance.post(
         `/BillPayment/purchaseAirtime`,
-        { details }
+        details
       );
 
       return response.data;

@@ -1,6 +1,8 @@
 import authEndpoints from "@/api/auth";
+import { CONSTANTS } from "@/constants";
 import {
   LoginDTO,
+  SendOtpDTO,
   TwoFactorAuthLoginDTO,
   VerifyOtpDTO,
 } from "@/types/LoginDTO";
@@ -47,6 +49,18 @@ class AuthService {
       return response.data;
     } catch (error) {
       console.error("Two-Factor Auth Login error:", error);
+      throw error;
+    }
+  }
+  async SendOtp(details: SendOtpDTO) {
+    try {
+      const response = await axios.post(
+        `${CONSTANTS.APIURL}/auth/sendOtp`,
+        details
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Send Otp error:", error);
       throw error;
     }
   }

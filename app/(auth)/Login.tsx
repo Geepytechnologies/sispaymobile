@@ -14,7 +14,7 @@ import { Link, router } from "expo-router";
 import { Controller, useForm } from "react-hook-form";
 import { loginSchema } from "@/validation/authValidation";
 import { joiResolver } from "@hookform/resolvers/joi";
-import { LoginDTO } from "@/types/LoginDTO";
+import { LoginDTO, SendOtpDTO } from "@/types/LoginDTO";
 import authService from "@/services/auth.service";
 import useDeviceInfo from "@/hooks/useDeviceInfo";
 import { formatPhoneNumber } from "@/utils/formatters";
@@ -65,16 +65,16 @@ const Login = (props: Props) => {
       phone: formattedNumber,
       password: data.password,
       pushtoken: expoPushToken || "string",
-      // deviceDetails: {
-      //   deviceId: deviceinfo.deviceId,
-      //   model: deviceinfo.model,
-      //   manufacturer: deviceinfo.manufacturer,
-      // },
       deviceDetails: {
-        deviceId: "string",
-        model: "string",
-        manufacturer: "string",
+        deviceId: deviceinfo.deviceId,
+        model: deviceinfo.model,
+        manufacturer: deviceinfo.manufacturer,
       },
+      // deviceDetails: {
+      //   deviceId: "string",
+      //   model: "string",
+      //   manufacturer: "string",
+      // },
     };
     try {
       const res = await authService.signin(formdetails);
@@ -122,12 +122,38 @@ const Login = (props: Props) => {
             text2: error.response?.data.message,
           });
         }
-        // Log detailed error information
-        // console.error("Login error:", {
-        //   statusCode: error.response?.status, // The status code
-        //   message: error.message, // The error message
-        //   data: error.response?.data, // The response data
-        // });
+
+        if (
+          error.response?.data.message ==
+          "detected a login from a new device but otp was unsuccessful"
+        ) {
+          Toast.show({
+            type: "error",
+            text1: "Login Failed",
+            text2: "Try Again Later",
+          });
+        }
+        if (error.response?.data.message == "User is not verified") {
+          const data: SendOtpDTO = {
+            name: error.response?.data.result.Firstname,
+            mobileNumber: error.response?.data.result.PhoneNumber,
+          };
+          const res = await authService.SendOtp(data);
+          if (res.statusCode == 200) {
+            router.push({
+              pathname: "/(auth)/Otp",
+              params: {
+                pinId: error.response.data.result.pinId,
+                to: error.response.data.result.to,
+              },
+            });
+          }
+          Toast.show({
+            type: "error",
+            text1: "Alert",
+            text2: "User not verified",
+          });
+        }
       }
     } finally {
       setLoading(false);

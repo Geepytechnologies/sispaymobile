@@ -14,12 +14,14 @@ import React, { useState } from "react";
 import DarkLogo from "@/components/common/DarkLogo";
 import PrimaryButton from "@/components/common/PrimaryButton";
 import { Feather } from "@expo/vector-icons";
-import { Link } from "expo-router";
+import { Link, router } from "expo-router";
 import { useForm, Controller } from "react-hook-form";
 import { joiResolver } from "@hookform/resolvers/joi";
 import { registerSchema } from "@/validation/authValidation";
 import { RegisterDTO } from "@/types/RegisterDTO";
 import authService from "@/services/auth.service";
+import Toast from "react-native-toast-message";
+import axios from "axios";
 
 type Props = {};
 
@@ -59,8 +61,35 @@ const Register = (props: Props) => {
       password: data.password,
       businessName: data.businessname,
     };
-    const res = await authService.Register(formdetails);
-    console.log(res);
+    try {
+      const res = await authService.Register(formdetails);
+      if (res.statusCode == 200) {
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: "Registration Successful",
+        });
+        router.push("/(auth)/Login");
+      }
+      console.log(res);
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status == 409) {
+          Toast.show({
+            type: "error",
+            text1: "Alert",
+            text2: error.response.data.message,
+          });
+        }
+        if (error.response?.status == 400) {
+          Toast.show({
+            type: "error",
+            text1: "Alert",
+            text2: "Try Again Later",
+          });
+        }
+      }
+    }
   };
   return (
     <KeyboardAvoidingView

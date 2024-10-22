@@ -39,6 +39,9 @@ import { RootState } from "@/config/store";
 import { ScreenDimensions } from "@/constants/Dimensions";
 import AirtimeTopUpwidget from "@/components/billpayment/AirtimeTopUpwidget";
 import { PurchaseAirtimeDTO } from "@/types/billpayment";
+import SuccessPayment from "@/components/billpayment/SuccessPayment";
+import axios from "axios";
+import Toast from "react-native-toast-message";
 type Props = {};
 
 const Airtime = (props: Props) => {
@@ -49,7 +52,9 @@ const Airtime = (props: Props) => {
   const [isModalVisible, setModalVisible] = useState(false);
   const [isContactsModalVisible, setIsContactsModalVisible] = useState(false);
   const [selectedPhone, setSelectedPhone] = useState(currentuser?.phoneNumber);
+  const [successModal, setSuccessModal] = useState(false);
   const [amount, setAmount] = useState("");
+  const [purchaseLoading, setPurchaseLoading] = useState(false);
 
   interface AirtimeCategory {
     id: string;
@@ -57,7 +62,7 @@ const Airtime = (props: Props) => {
     logoUrl: any;
   }
   const toggleModal = () => {
-    setModalVisible(!isModalVisible);
+    setSuccessModal(!successModal);
   };
   const {
     isLoading,
@@ -95,7 +100,6 @@ const Airtime = (props: Props) => {
     getContactsPermission();
   }, []);
 
-  console.log(contacts);
   const handlePhoneSelected = (item: Contacts.Contact) => {
     if (item.phoneNumbers) {
       setSelectedPhone(item.phoneNumbers[0].number);
@@ -128,7 +132,7 @@ const Airtime = (props: Props) => {
   const contactsRef = useRef<BottomSheet>(null);
 
   const showmodal = () => {
-    bottomsheetRef?.current?.expand();
+    bottomsheetRef.current?.expand();
   };
   const showcontactsmodal = () => {
     contactsRef.current?.expand();
@@ -163,13 +167,41 @@ const Airtime = (props: Props) => {
       phoneNumber: selectedPhone,
       serviceCategoryId: airtimeCategory?.id,
     };
+    console.log(airtimeDetails);
+    setPurchaseLoading(true);
     try {
       const res = await billpaymentService.purchaseAirtime(airtimeDetails);
-    } catch (error) {}
+      console.log(res.result);
+      if (res.result) {
+        toggleModal();
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        if (
+          error.response?.status == 403 &&
+          error.response.data.message == "User hasn't completed KYC"
+        ) {
+          Toast.show({
+            type: "info",
+            text1: "Attention!!!",
+            text2: "You Haven't Completed Your KYC",
+          });
+        }
+        console.log(error.message);
+        if (error.response) {
+          console.log(error.response.data);
+          console.log(error.response.status);
+          console.log(error.response.headers);
+        }
+      }
+    } finally {
+      setPurchaseLoading(false);
+    }
   };
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <SafeAreaView style={{ flex: 1, padding: 16, backgroundColor: "white" }}>
+        <Toast />
         <DynamicHeader title="Airtime" />
         <View
           style={[
@@ -206,16 +238,21 @@ const Airtime = (props: Props) => {
             color={Colors.primary}
           />
         </View>
-        <AirtimeTopUpwidget amount={amount} setAmount={setAmount} />
+        <AirtimeTopUpwidget
+          loading={purchaseLoading}
+          purchaseAirtime={buyAirtime}
+          amount={amount}
+          setAmount={setAmount}
+        />
         {/* network options sheet */}
         <BottomSheet
           backdropComponent={renderBackdrop}
           index={-1}
           ref={bottomsheetRef}
-          snapPoints={snapPoints}
+          snapPoints={["45%"]}
         >
-          <BottomSheetView>
-            <View className="p-5 justify-center h-full">
+          <BottomSheetView style={{ paddingTop: 20 }}>
+            <View className="px-5 pt-9 justify-center h-full">
               {!isLoading &&
                 airtimeCategories.map((item: any, index: any) => (
                   <TouchableOpacity
@@ -266,6 +303,17 @@ const Airtime = (props: Props) => {
             </View>
           </BottomSheetView>
         </BottomSheet>
+
+        <Modal
+          style={{ margin: 0 }}
+          onBackdropPress={toggleModal}
+          swipeDirection={["down"]}
+          onSwipeComplete={toggleModal}
+          propagateSwipe={true}
+          isVisible={successModal}
+        >
+          <SuccessPayment amount={amount} />
+        </Modal>
       </SafeAreaView>
     </TouchableWithoutFeedback>
   );

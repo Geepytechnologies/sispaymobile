@@ -1,7 +1,7 @@
 export interface LoginDTO {
   phone: string;
   password: string;
-  pushtoken: string;
+  pushtoken: string | null;
   deviceDetails: {
     deviceId: string | null;
     model: string | null;
@@ -23,5 +23,9 @@ export interface TwoFactorAuthLoginDTO {
 export interface VerifyOtpDTO {
   pinId: string | null;
   otp: string | null;
+  mobileNumber: string | null;
+}
+export interface SendOtpDTO {
+  name: string | null;
   mobileNumber: string | null;
 }

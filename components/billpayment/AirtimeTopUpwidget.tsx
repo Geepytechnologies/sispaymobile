@@ -13,9 +13,16 @@ import { globalstyles } from "@/styles/common";
 type Props = {
   setAmount: React.Dispatch<React.SetStateAction<string>>;
   amount: string;
+  purchaseAirtime: any;
+  loading: boolean;
 };
 
-const AirtimeTopUpwidget = ({ setAmount, amount }: Props) => {
+const AirtimeTopUpwidget = ({
+  loading,
+  setAmount,
+  amount,
+  purchaseAirtime,
+}: Props) => {
   const TopupPrices = [
     {
       price: 50,
@@ -63,10 +70,11 @@ const AirtimeTopUpwidget = ({ setAmount, amount }: Props) => {
           />
         </View>
         <TouchableOpacity
+          onPress={purchaseAirtime}
           className="px-4 py-2 rounded-[15px]"
-          style={{ backgroundColor: Colors.primary }}
+          style={{ backgroundColor: loading ? "gray" : Colors.primary }}
           activeOpacity={0.8}
-          disabled
+          disabled={loading}
         >
           <Text className="text-white">Pay</Text>
         </TouchableOpacity>

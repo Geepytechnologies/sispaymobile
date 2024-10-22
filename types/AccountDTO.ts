@@ -15,10 +15,10 @@ export interface AccountDTO {
 }
 
 export interface VerifyAndCreateAccountDTO {
-  IdentityType: string;
-  Phone: string;
-  Email: string;
-  IdentityNumber: string;
-  IdentityId: string;
+  IdentityType: string | string[];
+  Phone: string | undefined;
+  Email: string | undefined;
+  IdentityNumber: string | string[];
+  IdentityId: string | string[];
   Otp: string;
 }

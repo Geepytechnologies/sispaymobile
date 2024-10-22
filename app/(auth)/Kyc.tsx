@@ -14,8 +14,8 @@ import { Colors } from "@/constants/Colors";
 import PrimaryButton from "@/components/common/PrimaryButton";
 import { Keyboard } from "react-native";
 import accountService, { VerificationType } from "@/services/account.service";
-import { VerifyAndCreateAccountDTO } from "@/types/AccountDTO";
 import { globalstyles } from "@/styles/common";
+import { router } from "expo-router";
 
 type Props = {};
 
@@ -30,7 +30,15 @@ const Kyc = (props: Props) => {
         identityType,
         identityNumber
       );
+      console.log(res);
+      if (res) {
+        router.push({
+          pathname: "/(auth)/KycOtp",
+          params: { IdentityId: res.result._id, identityType, identityNumber },
+        });
+      }
     } catch (error) {
+      console.log(error);
     } finally {
       setLoading(false);
     }

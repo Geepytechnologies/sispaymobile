@@ -18,16 +18,17 @@ import {
   MaterialIcons,
 } from "@expo/vector-icons";
 import { globalstyles } from "@/styles/common";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/config/store";
 import accountService from "@/services/account.service";
 import { SET_ACCOUNT } from "@/config/slices/accountSlice";
-import { Link } from "expo-router";
+import { Link, useFocusEffect } from "expo-router";
 import { Colors } from "@/constants/Colors";
 import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 import TransferWidget from "@/components/TransferWidget";
 import ServiceWidget from "@/components/ServiceWidget";
+import useDeviceInfo from "@/hooks/useDeviceInfo";
 
 export default function HomeScreen() {
   const [balanceVisible, setBalancevisible] = useState(false);
@@ -40,11 +41,26 @@ export default function HomeScreen() {
   const firstname = currentuser && currentuser.firstName;
   const lastname = currentuser && currentuser.lastName;
   const axiosPrivate = useAxiosPrivate();
+  const deviceinfo = useDeviceInfo();
+
+  console.log({
+    id: deviceinfo.deviceId,
+    manu: deviceinfo.manufacturer,
+    model: deviceinfo.model,
+  });
 
   const getUserAccount = async () => {
     const res = await accountService.getUserAccount(axiosPrivate);
     dispatch(SET_ACCOUNT(res.result));
   };
+
+  useFocusEffect(
+    useCallback(() => {
+      getUserAccount();
+      // Add cleanup logic here
+      // return () => {};
+    }, [])
+  );
 
   useEffect(() => {
     getUserAccount();

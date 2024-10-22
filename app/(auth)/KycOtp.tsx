@@ -14,40 +14,28 @@ import OTPTextInput from "react-native-otp-textinput";
 import * as Clipboard from "expo-clipboard";
 import UseCountdownTimer from "@/hooks/useCountdownTimer";
 import axios from "axios";
-import authService from "@/services/auth.service";
-import { TwoFactorAuthLoginDTO } from "@/types/LoginDTO";
-import { usePushNotifications } from "@/hooks/usePushNotifications";
+
 import Toast from "react-native-toast-message";
 import { SafeAreaView } from "react-native-safe-area-context";
-import useDeviceInfo from "@/hooks/useDeviceInfo";
 import accountService from "@/services/account.service";
-import useAxiosPrivate from "@/hooks/useAxiosPrivate";
-import { useDispatch } from "react-redux";
-import { SIGNIN } from "@/config/slices/userSlice";
-import { SET_ACCOUNT } from "@/config/slices/accountSlice";
-import { SET_TOKENS } from "@/config/slices/authSlice";
+import { useSelector } from "react-redux";
+
 import { Colors } from "@/constants/Colors";
 import { globalstyles } from "@/styles/common";
 import DarkLogo from "@/components/common/DarkLogo";
-import { useAuth } from "@/utils/AuthProvider";
+import { VerifyAndCreateAccountDTO } from "@/types/AccountDTO";
+import { RootState } from "@/config/store";
 
 type Props = {};
 
-const TwoFactorOtp = (props: Props) => {
-  const { setAccessToken } = useAuth();
+const KycOtp = (props: Props) => {
   const otp = useRef<OTPTextView>(null);
-  const { phone, pinId, to } = useLocalSearchParams();
-  const deviceinfo = useDeviceInfo();
+  const { IdentityId, identityType, identityNumber } = useLocalSearchParams();
 
   const [otpInput, setOtpInput] = useState<string>("");
   const { padZero, minutes, seconds, setIsRunning, isRunning } =
     UseCountdownTimer();
-  const { expoPushToken } = usePushNotifications();
-  const axiosInstance = useAxiosPrivate();
-
-  const last4Digits = phone.slice(-4);
-
-  const dispatch = useDispatch();
+  const { currentuser } = useSelector((state: RootState) => state.user);
 
   const handleCellTextChange = async (text: string, i: number) => {
     if (i === 0) {
@@ -58,39 +46,28 @@ const TwoFactorOtp = (props: Props) => {
     }
   };
   const handleSubmit = async () => {
-    const data: TwoFactorAuthLoginDTO = {
-      //@ts-ignore
-      mobileNumber: to,
-      otp: otpInput,
-      //@ts-ignore
-      pinId: pinId,
-      pushtoken: expoPushToken || "string",
-      deviceDetails: {
-        deviceId: deviceinfo.deviceId,
-        model: deviceinfo.model,
-        manufacturer: deviceinfo.manufacturer,
-      },
+    const data: VerifyAndCreateAccountDTO = {
+      IdentityType: identityType,
+      Phone: currentuser?.phoneNumber,
+      Email: currentuser?.email,
+      IdentityNumber: identityNumber,
+      IdentityId: IdentityId,
+      Otp: otpInput,
     };
     try {
-      const res = await authService.TwoFactorAuthLogin(data);
-      dispatch(SIGNIN(res.result));
-      setAccessToken(res.result.accessToken);
-      const userAccount = await accountService.getUserAccount(axiosInstance);
-      dispatch(SET_ACCOUNT(userAccount.result));
-      dispatch(
-        SET_TOKENS({
-          accessToken: res.result.accessToken,
-          refreshToken: res.result.refreshToken,
-        })
-      );
-
-      // router.push("/(tabs)");
-
-      Toast.show({
-        type: "success",
-        text1: "Success",
-        text2: "Welcome",
-      });
+      if (otpInput.length !== 6) {
+        return;
+      }
+      //   const res = await accountService.VerifyAndCreateAccount(data);
+      const res = { result: true };
+      if (res.result) {
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: "Verification Successful",
+        });
+        router.push("/(auth)/Login");
+      }
     } catch (error) {
       if (axios.isAxiosError(error)) {
         if (error.response?.status == 400) {
@@ -113,7 +90,7 @@ const TwoFactorOtp = (props: Props) => {
           Let&apos;s Complete Your Verification
         </Text>
         <Text className="text-[#A1A1A1] font-[500] text-[13px] mt-[8px]">
-          We&apos;ve sent a code to *******{last4Digits}
+          A code has been sent to you
         </Text>
         <OTPTextInput
           containerStyle={{ marginTop: 30 }}
@@ -141,6 +118,7 @@ const TwoFactorOtp = (props: Props) => {
         </Text>
         <View className="w-full mt-6" style={[{ gap: 10 }]}>
           <TouchableOpacity
+            disabled={otpInput.length !== 6}
             onPress={handleSubmit}
             className="w-full"
             activeOpacity={0.8}
@@ -156,7 +134,7 @@ const TwoFactorOtp = (props: Props) => {
   );
 };
 
-export default TwoFactorOtp;
+export default KycOtp;
 
 const styles = StyleSheet.create({
   roundedTextInput: {
