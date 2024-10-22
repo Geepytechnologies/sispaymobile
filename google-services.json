@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "416501030388",
+    "project_id": "sispay-48ff8",
+    "storage_bucket": "sispay-48ff8.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:416501030388:android:6e6a5b1768b9c0cb4e6da1",
+        "android_client_info": {
+          "package_name": "com.geepytech.sispay"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCabqvJLfgPYB3LDJKNlnpf0RJsIcDCjMc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:416501030388:android:3ed72edee221a1f84e6da1",
+        "android_client_info": {
+          "package_name": "com.www.pay.sispay"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCabqvJLfgPYB3LDJKNlnpf0RJsIcDCjMc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
