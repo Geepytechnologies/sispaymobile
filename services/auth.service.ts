@@ -1,5 +1,9 @@
 import authEndpoints from "@/api/auth";
-import { LoginDTO } from "@/types/LoginDTO";
+import {
+  LoginDTO,
+  TwoFactorAuthLoginDTO,
+  VerifyOtpDTO,
+} from "@/types/LoginDTO";
 import { RegisterDTO } from "@/types/RegisterDTO";
 import { deleteFromStore } from "@/utils/localstorage";
 import axios from "axios";
@@ -25,7 +29,27 @@ class AuthService {
       throw error;
     }
   }
-
+  async TwoFactorAuthLogin(details: TwoFactorAuthLoginDTO) {
+    try {
+      const response = await axios.post(
+        `${authEndpoints.twoFactorAuth}`,
+        details
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Two-Factor Auth Login error:", error);
+      throw error;
+    }
+  }
+  async VerifyOtp(details: VerifyOtpDTO) {
+    try {
+      const response = await axios.post(`${authEndpoints.verifyotp}`, details);
+      return response.data;
+    } catch (error) {
+      console.error("Two-Factor Auth Login error:", error);
+      throw error;
+    }
+  }
   async Register(userDetails: RegisterDTO) {
     try {
       const response = await axios.post(`${authEndpoints.register}`, {

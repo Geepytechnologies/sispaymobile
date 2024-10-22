@@ -3,14 +3,14 @@ import React from "react";
 
 type Props = {};
 
-const Twofactorlogin = (props: Props) => {
+const contact = (props: Props) => {
   return (
     <View>
-      <Text>Twofactorlogin</Text>
+      <Text>contact</Text>
     </View>
   );
 };
 
-export default Twofactorlogin;
+export default contact;
 
 const styles = StyleSheet.create({});

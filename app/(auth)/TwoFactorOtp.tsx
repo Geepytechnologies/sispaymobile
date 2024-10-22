@@ -15,7 +15,7 @@ import * as Clipboard from "expo-clipboard";
 import UseCountdownTimer from "@/hooks/useCountdownTimer";
 import axios from "axios";
 import authService from "@/services/auth.service";
-import { TwoFactorAuthLoginDTO, VerifyOtpDTO } from "@/types/LoginDTO";
+import { TwoFactorAuthLoginDTO } from "@/types/LoginDTO";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import Toast from "react-native-toast-message";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -32,7 +32,7 @@ import DarkLogo from "@/components/common/DarkLogo";
 
 type Props = {};
 
-const Otp = (props: Props) => {
+const TwoFactorOtp = (props: Props) => {
   const otp = useRef<OTPTextView>(null);
   const { phone, pinId, to } = useLocalSearchParams();
   const deviceinfo = useDeviceInfo();
@@ -56,22 +56,38 @@ const Otp = (props: Props) => {
     }
   };
   const handleSubmit = async () => {
-    const data: VerifyOtpDTO = {
+    const data: TwoFactorAuthLoginDTO = {
       //@ts-ignore
       mobileNumber: to,
       otp: otpInput,
       //@ts-ignore
       pinId: pinId,
+      pushtoken: expoPushToken || "string",
+      deviceDetails: {
+        deviceId: deviceinfo.deviceId || "string",
+        model: deviceinfo.model || "string",
+        manufacturer: deviceinfo.manufacturer || "string",
+      },
     };
     try {
-      const res = await authService.VerifyOtp(data);
-      if (res.result.verified == "True") {
-        Toast.show({
-          type: "success",
-          text1: "Success",
-          text2: "Verification Successful",
-        });
-      }
+      const res = await authService.TwoFactorAuthLogin(data);
+      dispatch(SIGNIN(res.result));
+      const userAccount = await accountService.getUserAccount(axiosInstance);
+      dispatch(SET_ACCOUNT(userAccount.result));
+      dispatch(
+        SET_TOKENS({
+          accessToken: res.result.accessToken,
+          refreshToken: res.result.refreshToken,
+        })
+      );
+
+      // router.push("/(tabs)");
+
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Welcome",
+      });
     } catch (error) {
       if (axios.isAxiosError(error)) {
         if (error.response?.status == 400) {
@@ -137,7 +153,7 @@ const Otp = (props: Props) => {
   );
 };
 
-export default Otp;
+export default TwoFactorOtp;
 
 const styles = StyleSheet.create({
   roundedTextInput: {

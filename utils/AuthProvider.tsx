@@ -1,65 +1,56 @@
-import { RootState } from "@/config/store";
-import { router, Slot, SplashScreen, useSegments } from "expo-router";
-import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { router, useSegments } from "expo-router";
+import React, {
+  createContext,
+  PropsWithChildren,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { getFromStore } from "./localstorage";
-import { SIGNIN } from "@/config/slices/userSlice";
 
-type Props = {
-  children: React.ReactNode;
+type AuthContextType = {
+  accessToken: string | null;
+  setAccessToken: React.Dispatch<React.SetStateAction<string | null>>;
 };
 
-export const AuthProvider = ({ children }: Props) => {
-  const { currentuser } = useSelector((state: RootState) => state.user);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [authloading, setAuthloading] = useState(true);
-  const [userOnboarded, setUserOnboarded] = useState();
-  const dispatch = useDispatch();
+const AuthContext = createContext<AuthContextType>({
+  accessToken: null,
+  setAccessToken: () => null,
+});
 
+const AuthContextProvider = ({ children }: PropsWithChildren) => {
+  const [accessToken, setAccessToken] = useState<string | null>("");
+  const [useronboarded, setUserOnboarded] = useState<boolean>();
+  console.log("isUserOnboarded:", useronboarded);
   const segments = useSegments();
-  const authGroup = segments[0] === "(auth)";
+  const isAuthGroup = segments[0] === "(auth)";
+  const isOnboardingGroup = segments[0] === "(onboarding)";
+
+  const checkIfUserIsOnboarded = async () => {
+    const userOnboarded = await getFromStore("useronboarded");
+    setUserOnboarded(userOnboarded);
+  };
 
   useEffect(() => {
-    const checkAuthStatus = async () => {
-      try {
-        console.log("i called checkauth");
-        const user = await getFromStore("sispayuser");
-        if (user && user.accessToken) {
-          dispatch(SIGNIN(user));
-          setIsAuthenticated(true);
-        } else {
-          setIsAuthenticated(false);
-        }
-      } catch (error) {
-        console.error("Error checking auth status", error);
-        setIsAuthenticated(false);
-      } finally {
-        setAuthloading(false);
+    checkIfUserIsOnboarded();
+    if (!isAuthGroup && !accessToken) {
+      if (!useronboarded && !isOnboardingGroup && useronboarded !== undefined) {
+        router.replace("/(onboarding)");
+        return;
       }
-    };
-    const checkOnboarding = async () => {
-      const res = (await getFromStore("useronboarded")) || false;
-      setUserOnboarded(res);
-    };
-
-    checkAuthStatus();
-    checkOnboarding();
-  }, [currentuser]);
-
-  useEffect(() => {
-    if (!authloading) {
-      SplashScreen.hideAsync();
-      if (!userOnboarded) {
-        router.push("/onboarding");
-      } else {
-        if (!isAuthenticated && !authGroup) {
-          router.push("/(auth)/Login");
-        }
-        if (isAuthenticated) {
-          router.push("/(tabs)");
-        }
-      }
+      router.replace("/(auth)/Login");
     }
-  }, [isAuthenticated]);
-  return <>{children}</>;
+    if (isAuthGroup && accessToken) {
+      router.replace("/(tabs)");
+    }
+  }, [segments, accessToken]);
+  return (
+    <AuthContext.Provider value={{ accessToken, setAccessToken }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
+
+export default AuthContextProvider;
+
+export const useAuth = () => useContext(AuthContext);

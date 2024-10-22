@@ -10,7 +10,7 @@ import React, { useState } from "react";
 import DarkLogo from "@/components/common/DarkLogo";
 import PrimaryButton from "@/components/common/PrimaryButton";
 import { Feather } from "@expo/vector-icons";
-import { Link } from "expo-router";
+import { Link, router } from "expo-router";
 import { Controller, useForm } from "react-hook-form";
 import { loginSchema } from "@/validation/authValidation";
 import { joiResolver } from "@hookform/resolvers/joi";
@@ -21,20 +21,27 @@ import { formatPhoneNumber } from "@/utils/formatters";
 import { Platform } from "react-native";
 import { ScrollView } from "react-native";
 import Toast from "react-native-toast-message";
-import { useGlobalContext } from "@/config/slices/GlobalSlice";
 import { addToStore } from "@/utils/localstorage";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { useDispatch } from "react-redux";
 import { SIGNIN } from "@/config/slices/userSlice";
+import axios from "axios";
+import { SET_TOKENS } from "@/config/slices/authSlice";
+import { useAuth } from "@/utils/AuthProvider";
+import accountService from "@/services/account.service";
+import useAxiosPrivate from "@/hooks/useAxiosPrivate";
+import { SET_ACCOUNT } from "@/config/slices/accountSlice";
 
 type Props = {};
 
 const Login = (props: Props) => {
+  const { setAccessToken } = useAuth();
   const [loading, setLoading] = useState(false);
   const [passwordvisible, setPasswordvisible] = useState(false);
   const deviceinfo = useDeviceInfo();
   const { expoPushToken } = usePushNotifications();
   const dispatch = useDispatch();
+  const axiosInstance = useAxiosPrivate();
 
   const [formData, setFormData] = useState({ phone: "", password: "" });
 
@@ -57,7 +64,7 @@ const Login = (props: Props) => {
     const formdetails: LoginDTO = {
       phone: formattedNumber,
       password: data.password,
-      pushtoken: expoPushToken || "",
+      pushtoken: expoPushToken || "string",
       // deviceDetails: {
       //   deviceId: deviceinfo.deviceId,
       //   model: deviceinfo.model,
@@ -71,16 +78,57 @@ const Login = (props: Props) => {
     };
     try {
       const res = await authService.signin(formdetails);
-      console.log(res);
-      dispatch(SIGNIN(res.result));
 
-      await addToStore("sispayuser", res.result);
+      dispatch(SIGNIN(res.result));
+      setAccessToken(res.result.accessToken);
+      const userAccount = await accountService.getUserAccount(axiosInstance);
+      dispatch(SET_ACCOUNT(userAccount.result));
+      dispatch(
+        SET_TOKENS({
+          accessToken: res.result.accessToken,
+          refreshToken: res.result.refreshToken,
+        })
+      );
+
+      // router.push("/(tabs)");
+
       Toast.show({
         type: "success",
         text1: "Success",
         text2: "Welcome",
       });
     } catch (error) {
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status == 401) {
+          Toast.show({
+            type: "info",
+            text1: "Alert",
+            text2: "Detected a login from a new device",
+          });
+          router.push({
+            pathname: "/(auth)/TwoFactorOtp",
+            params: {
+              phone: formattedNumber,
+              password: data.password,
+              pinId: error.response.data.result.pinId,
+              to: error.response.data.result.to,
+            },
+          });
+        }
+        if (error.response?.status == 404) {
+          Toast.show({
+            type: "error",
+            text1: "Login Failure",
+            text2: error.response?.data.message,
+          });
+        }
+        // Log detailed error information
+        // console.error("Login error:", {
+        //   statusCode: error.response?.status, // The status code
+        //   message: error.message, // The error message
+        //   data: error.response?.data, // The response data
+        // });
+      }
     } finally {
       setLoading(false);
     }
@@ -115,7 +163,7 @@ const Login = (props: Props) => {
               <View
                 style={[
                   styles.inputboxcon,
-                  { borderColor: errors.email ? "red" : "#E2EFFF" },
+                  { borderColor: errors.phone ? "red" : "#E2EFFF" },
                 ]}
               >
                 <Controller
@@ -123,6 +171,11 @@ const Login = (props: Props) => {
                   name="phone"
                   render={({ field: { onChange, onBlur, value } }) => (
                     <TextInput
+                      style={[
+                        styles.inputbox,
+                        { borderColor: errors.phone ? "red" : "#E2EFFF" },
+                      ]}
+                      className="p-[15px]"
                       onBlur={onBlur}
                       onChangeText={onChange}
                       value={value}
@@ -159,7 +212,11 @@ const Login = (props: Props) => {
                   name="password"
                   render={({ field: { onChange, onBlur, value } }) => (
                     <TextInput
-                      className="flex-1"
+                      style={[
+                        styles.inputbox,
+                        { borderColor: errors.password ? "red" : "#E2EFFF" },
+                      ]}
+                      className="flex-1 border-r-0 p-[15px]"
                       onBlur={onBlur}
                       onChangeText={onChange}
                       value={value}
@@ -172,6 +229,7 @@ const Login = (props: Props) => {
                 />
 
                 <Feather
+                  style={{ marginRight: 15 }}
                   suppressHighlighting
                   onPress={() => togglePassword()}
                   name={passwordvisible ? "eye" : "eye-off"}
@@ -217,12 +275,15 @@ const Login = (props: Props) => {
 export default Login;
 
 const styles = StyleSheet.create({
-  inputbox: {},
+  inputbox: {
+    borderRadius: 8,
+    borderColor: "#E2EFFF",
+    backgroundColor: "#F6FAFF",
+  },
   inputboxcon: {
     borderRadius: 8,
-    backgroundColor: "#F6FAFF",
     borderWidth: 1.5,
     borderColor: "#E2EFFF",
-    padding: 15,
+    backgroundColor: "#F6FAFF",
   },
 });

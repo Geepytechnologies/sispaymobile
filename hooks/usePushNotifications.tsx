@@ -88,7 +88,7 @@ export function usePushNotifications() {
           });
         token = tokenResponse.data;
       } else {
-        alert("Must use a physical device for Push Notifications");
+        // alert("Must use a physical device for Push Notifications");
       }
 
       if (Platform.OS === "android") {

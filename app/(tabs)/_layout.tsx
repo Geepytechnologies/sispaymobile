@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import React from "react";
+import React, { useEffect } from "react";
 
 import { TabBarIcon } from "@/components/navigation/TabBarIcon";
 import { Colors } from "@/constants/Colors";
@@ -10,7 +10,6 @@ import Profile from "@/assets/images/icons/profile.svg";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
-
   return (
     <Tabs
       screenOptions={{
@@ -30,6 +29,8 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
+          tabBarItemStyle: { height: 60, alignSelf: "center" },
+
           title: "Home",
           tabBarIcon: ({ color, focused }) => <Home />,
         }}
@@ -37,6 +38,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="transactions"
         options={{
+          tabBarItemStyle: { height: 60, alignSelf: "center" },
           title: "Transactions",
           tabBarIcon: ({ color, focused }) => <Transactions />,
         }}
@@ -44,6 +46,8 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
+          tabBarItemStyle: { height: 60, alignSelf: "center" },
+
           title: "Profile",
           tabBarIcon: ({ color, focused }) => <Profile />,
         }}

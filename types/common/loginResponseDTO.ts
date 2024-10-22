@@ -6,4 +6,6 @@ export interface loginResponseDTO {
   phoneNumber: string;
   userId: string;
   email: string;
+  accessToken: string;
+  refreshToken: string;
 }
