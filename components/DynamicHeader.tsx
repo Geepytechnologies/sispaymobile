@@ -12,7 +12,7 @@ const DynamicHeader = ({ title }: Props) => {
   return (
     <View style={[globalstyles.rowview, { justifyContent: "space-between" }]}>
       <Backbutton />
-      <Text className="text-md font-[500]">{title}</Text>
+      <Text className="text-base font-[600]">{title}</Text>
       <Link href={"/(tabs)/transactions"}>History</Link>
     </View>
   );

@@ -29,6 +29,9 @@ import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 import TransferWidget from "@/components/TransferWidget";
 import ServiceWidget from "@/components/ServiceWidget";
 import useDeviceInfo from "@/hooks/useDeviceInfo";
+import { useQuery } from "@tanstack/react-query";
+import walletService from "@/services/wallet.service";
+import SingleTransactionWidget from "@/components/common/SingleTransactionWidget";
 
 export default function HomeScreen() {
   const [balanceVisible, setBalancevisible] = useState(false);
@@ -53,7 +56,21 @@ export default function HomeScreen() {
     const res = await accountService.getUserAccount(axiosPrivate);
     dispatch(SET_ACCOUNT(res.result));
   };
-
+  const accountNumber =
+    (userAccount && userAccount.accountNumber) || "8022507499";
+  const startDate = "";
+  const endDate = "";
+  const {
+    isLoading,
+    data: userTransactions,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ["transactions"],
+    queryFn: () =>
+      walletService.getTransactions(startDate, endDate, accountNumber, 1, 2),
+  });
+  console.log(userTransactions);
   useFocusEffect(
     useCallback(() => {
       getUserAccount();
@@ -81,8 +98,10 @@ export default function HomeScreen() {
             </Text>
           </View>
         </View>
-        <FontAwesome name="qrcode" size={24} color="black" />
-        <EvilIcons name="bell" size={24} color="black" />
+        <View style={[globalstyles.rowview, { gap: 10 }]}>
+          <FontAwesome name="qrcode" size={24} color="black" />
+          <EvilIcons name="bell" size={24} color="black" />
+        </View>
       </View>
       {/* widget */}
       <View className="flex flex-row items-center mt-5 justify-between px-5 bg-appblue rounded-[20px] min-h-[120px]">
@@ -129,11 +148,13 @@ export default function HomeScreen() {
         </View>
       </View>
       {/* latest transactions */}
-      <View className="bg-white shadow-xl">
-        <View>
-          <View></View>
+      {!isLoading && (
+        <View className="bg-white px-3 pt-6 my-5 shadow-md rounded-xl">
+          {userTransactions.result.map((t: any, index: any) => (
+            <SingleTransactionWidget key={index} transaction={t} />
+          ))}
         </View>
-      </View>
+      )}
       {/* Transfer */}
       <TransferWidget />
       {/* services */}

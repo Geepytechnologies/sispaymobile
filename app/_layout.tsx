@@ -76,42 +76,48 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView>
       <Provider store={store}>
-        <AuthContextProvider>
-          <QueryClientProvider client={queryClient}>
-            <ThemeProvider
-              value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-            >
-              <Stack initialRouteName="index">
-                <Stack.Screen name="index" options={{ headerShown: false }} />
-                <Stack.Screen
-                  name="(onboarding)"
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen
-                  name="billpayment"
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen name="contact" options={{ headerShown: false }} />
-                <Stack.Screen
-                  name="helpcenter"
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen
-                  name="settings"
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen
-                  name="withdraw"
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        {/* <AuthContextProvider> */}
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider
+            value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+          >
+            <Stack initialRouteName="index">
+              <Stack.Screen name="index" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="(onboarding)"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="billpayment"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen name="contact" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="helpcenter"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen name="settings" options={{ headerShown: false }} />
+              <Stack.Screen name="withdraw" options={{ headerShown: false }} />
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="transactionDetails"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="transfer/ToSispay"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="transfer/ToBankAccount"
+                options={{ headerShown: false }}
+              />
 
-                <Stack.Screen name="+not-found" />
-              </Stack>
-            </ThemeProvider>
-          </QueryClientProvider>
-        </AuthContextProvider>
+              <Stack.Screen name="+not-found" />
+            </Stack>
+          </ThemeProvider>
+        </QueryClientProvider>
+        {/* </AuthContextProvider> */}
       </Provider>
     </GestureHandlerRootView>
   );

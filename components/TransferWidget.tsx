@@ -2,7 +2,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import React from "react";
 import { Colors } from "@/constants/Colors";
 import { MaterialCommunityIcons, Zocial } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { Link, router } from "expo-router";
 
 type Props = {};
 
@@ -11,7 +11,11 @@ const TransferWidget = (props: Props) => {
     <View className="bg-white px-3 py-6 my-5 shadow-md rounded-xl">
       <View className="flex flex-row justify-between">
         {/* To Sispay */}
-        <View className="flex flex-col">
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => router.push("/transfer/ToSispay")}
+          className="flex flex-col"
+        >
           <View
             style={[{ backgroundColor: "rgba(3, 29, 66, 0.2)" }]}
             className="flex items-center justify-center rounded-full h-[50px] w-[50px] 
@@ -20,9 +24,13 @@ const TransferWidget = (props: Props) => {
             <Zocial name="persona" size={24} color={Colors.primary} />
           </View>
           <Text className="text-[12px] font-popp font-[500]">To Sispay</Text>
-        </View>
+        </TouchableOpacity>
         {/* To Bank */}
-        <View className="flex flex-col">
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => router.push("/transfer/toBankAccount")}
+          className="flex flex-col"
+        >
           <View
             style={[{ backgroundColor: "rgba(3, 29, 66, 0.2)" }]}
             className="flex items-center justify-center rounded-full h-[50px] w-[50px] 
@@ -35,7 +43,7 @@ const TransferWidget = (props: Props) => {
             />
           </View>
           <Text className="text-[12px] font-popp font-[500]">To Bank</Text>
-        </View>
+        </TouchableOpacity>
         {/* Withdraw */}
         <TouchableOpacity
           onPress={() => router.push("/withdraw")}

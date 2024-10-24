@@ -22,3 +22,13 @@ export interface VerifyAndCreateAccountDTO {
   IdentityId: string | string[];
   Otp: string;
 }
+
+export interface TransferDTO {
+  saveBeneficiary: boolean;
+  nameEnquiryReference: string;
+  debitAccountNumber: string | undefined;
+  beneficiaryBankCode: string | undefined;
+  beneficiaryAccountNumber: string;
+  amount: number | undefined | "";
+  narration: string;
+}
