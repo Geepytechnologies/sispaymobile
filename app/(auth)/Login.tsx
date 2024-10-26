@@ -1,9 +1,11 @@
 import {
+  Keyboard,
   KeyboardAvoidingView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
 } from "react-native";
 import React, { useState } from "react";
@@ -160,141 +162,143 @@ const Login = (props: Props) => {
     }
   };
   return (
-    <KeyboardAvoidingView
-      className="p-[44px] bg-white flex-1"
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
-    >
-      <Toast />
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ flexGrow: 1 }}
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <KeyboardAvoidingView
+        className="p-[44px] bg-white flex-1"
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
       >
-        <View className="flex-1">
-          <DarkLogo width={200} />
-          <Text className="font-inter font-[700] text-[#000C20] text-[24px]">
-            Login
-          </Text>
-          <Text className="text-[#A1A1A1] font-[500] text-[13px] mt-[8px]">
-            Please enter your email address or phone number and password to log
-            in to your account
-          </Text>
-          {/* form */}
-          <View className="flex flex-col mt-[18px]">
-            {/* Phone */}
-            <View className="flex flex-col mb-[21px]">
-              <Text className="font-inter font-[600] text-[#000C20] text-[18px] mb-[14px]">
-                Phone Number
-              </Text>
-              <View
-                style={[
-                  styles.inputboxcon,
-                  { borderColor: errors.phone ? "red" : "#E2EFFF" },
-                ]}
-              >
-                <Controller
-                  control={control}
-                  name="phone"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <TextInput
-                      style={[
-                        styles.inputbox,
-                        { borderColor: errors.phone ? "red" : "#E2EFFF" },
-                      ]}
-                      className="p-[15px]"
-                      onBlur={onBlur}
-                      onChangeText={onChange}
-                      value={value}
-                      placeholder="08012355312"
-                      placeholderTextColor={"#A1A1A1"}
-                      keyboardType="numeric"
-                    />
-                  )}
-                />
-              </View>
-              {errors.phone?.message &&
-                typeof errors.phone.message === "string" && (
-                  <Text
-                    style={{ color: "#ef4444", fontSize: 12, marginTop: 5 }}
-                  >
-                    {errors.phone.message}
-                  </Text>
-                )}
-            </View>
-            {/* password */}
-            <View className="flex flex-col mb-[21px]">
-              <Text className="font-inter font-[600] text-[#000C20] text-[18px] mb-[14px]">
-                Password
-              </Text>
-              <View
-                className="flex flex-row items-center"
-                style={[
-                  styles.inputboxcon,
-                  { borderColor: errors.password ? "red" : "#E2EFFF" },
-                ]}
-              >
-                <Controller
-                  control={control}
-                  name="password"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <TextInput
-                      style={[
-                        styles.inputbox,
-                        { borderColor: errors.password ? "red" : "#E2EFFF" },
-                      ]}
-                      className="flex-1 border-r-0 p-[15px]"
-                      onBlur={onBlur}
-                      onChangeText={onChange}
-                      value={value}
-                      placeholder="112233"
-                      placeholderTextColor={"#A1A1A1"}
-                      keyboardType="numeric"
-                      secureTextEntry={!passwordvisible}
-                    />
-                  )}
-                />
-
-                <Feather
-                  style={{ marginRight: 15 }}
-                  suppressHighlighting
-                  onPress={() => togglePassword()}
-                  name={passwordvisible ? "eye" : "eye-off"}
-                  size={17}
-                  color="black"
-                />
-              </View>
-
-              {errors.password?.message &&
-                typeof errors.password.message === "string" && (
-                  <Text
-                    style={{ color: "#ef4444", fontSize: 12, marginTop: 5 }}
-                  >
-                    {errors.password.message}
-                  </Text>
-                )}
-            </View>
-            <TouchableOpacity
-              onPress={handleSubmit(onSubmit)}
-              disabled={loading}
-              className="mt-[28px] mb-[22px] w-full"
-              activeOpacity={0.8}
-            >
-              <PrimaryButton text={loading ? "Processing..." : "Continue"} />
-            </TouchableOpacity>
-            <Text className="text-[#A1A1A1]font-inter text-[13px] font-[500] text-center">
-              Don&apos;t have an account?
-              <Link
-                suppressHighlighting
-                href={"/(auth)/Register"}
-                className="text-appblue"
-              >
-                &nbsp;Sign Up
-              </Link>
+        <Toast />
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ flexGrow: 1 }}
+        >
+          <View className="flex-1">
+            <DarkLogo width={200} />
+            <Text className="font-inter font-[700] text-[#000C20] text-[24px]">
+              Login
             </Text>
+            <Text className="text-[#A1A1A1] font-[500] text-[13px] mt-[8px]">
+              Please enter your email address or phone number and password to
+              log in to your account
+            </Text>
+            {/* form */}
+            <View className="flex flex-col mt-[18px]">
+              {/* Phone */}
+              <View className="flex flex-col mb-[21px]">
+                <Text className="font-inter font-[600] text-[#000C20] text-[18px] mb-[14px]">
+                  Phone Number
+                </Text>
+                <View
+                  style={[
+                    styles.inputboxcon,
+                    { borderColor: errors.phone ? "red" : "#E2EFFF" },
+                  ]}
+                >
+                  <Controller
+                    control={control}
+                    name="phone"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <TextInput
+                        style={[
+                          styles.inputbox,
+                          { borderColor: errors.phone ? "red" : "#E2EFFF" },
+                        ]}
+                        className="p-[15px]"
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value}
+                        placeholder="08012355312"
+                        placeholderTextColor={"#A1A1A1"}
+                        keyboardType="numeric"
+                      />
+                    )}
+                  />
+                </View>
+                {errors.phone?.message &&
+                  typeof errors.phone.message === "string" && (
+                    <Text
+                      style={{ color: "#ef4444", fontSize: 12, marginTop: 5 }}
+                    >
+                      {errors.phone.message}
+                    </Text>
+                  )}
+              </View>
+              {/* password */}
+              <View className="flex flex-col mb-[21px]">
+                <Text className="font-inter font-[600] text-[#000C20] text-[18px] mb-[14px]">
+                  Password
+                </Text>
+                <View
+                  className="flex flex-row items-center"
+                  style={[
+                    styles.inputboxcon,
+                    { borderColor: errors.password ? "red" : "#E2EFFF" },
+                  ]}
+                >
+                  <Controller
+                    control={control}
+                    name="password"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <TextInput
+                        style={[
+                          styles.inputbox,
+                          { borderColor: errors.password ? "red" : "#E2EFFF" },
+                        ]}
+                        className="flex-1 border-r-0 p-[15px]"
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value}
+                        placeholder="112233"
+                        placeholderTextColor={"#A1A1A1"}
+                        keyboardType="numeric"
+                        secureTextEntry={!passwordvisible}
+                      />
+                    )}
+                  />
+
+                  <Feather
+                    style={{ marginRight: 15 }}
+                    suppressHighlighting
+                    onPress={() => togglePassword()}
+                    name={passwordvisible ? "eye" : "eye-off"}
+                    size={17}
+                    color="black"
+                  />
+                </View>
+
+                {errors.password?.message &&
+                  typeof errors.password.message === "string" && (
+                    <Text
+                      style={{ color: "#ef4444", fontSize: 12, marginTop: 5 }}
+                    >
+                      {errors.password.message}
+                    </Text>
+                  )}
+              </View>
+              <TouchableOpacity
+                onPress={handleSubmit(onSubmit)}
+                disabled={loading}
+                className="mt-[28px] mb-[22px] w-full"
+                activeOpacity={0.8}
+              >
+                <PrimaryButton text={loading ? "Processing..." : "Continue"} />
+              </TouchableOpacity>
+              <Text className="text-[#A1A1A1]font-inter text-[13px] font-[500] text-center">
+                Don&apos;t have an account?
+                <Link
+                  suppressHighlighting
+                  href={"/(auth)/Register"}
+                  className="text-appblue"
+                >
+                  &nbsp;Sign Up
+                </Link>
+              </Text>
+            </View>
           </View>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </TouchableWithoutFeedback>
   );
 };
 

@@ -51,7 +51,9 @@ const DataTopUpDetailswidget = ({
           >
             <Text className="text-gray-500">Bonus to Earn</Text>
             <View style={[globalstyles.rowview, { gap: 5 }]}>
-              <Text className="text-green-500">+₦ {amount} Cashback</Text>
+              <Text className="text-green-500">
+                +₦ {0.025 * Number(amount)} Cashback
+              </Text>
             </View>
           </View>
           {/* Payment Method */}

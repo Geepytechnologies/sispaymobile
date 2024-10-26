@@ -8,64 +8,62 @@ type Props = {};
 
 const TransferWidget = (props: Props) => {
   return (
-    <View className="bg-white px-3 py-6 my-5 shadow-md rounded-xl">
-      <View className="flex flex-row justify-between">
-        {/* To Sispay */}
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={() => router.push("/transfer/ToSispay")}
-          className="flex flex-col"
-        >
-          <View
-            style={[{ backgroundColor: "rgba(3, 29, 66, 0.2)" }]}
-            className="flex items-center justify-center rounded-full h-[50px] w-[50px] 
+    <View className="flex flex-row justify-between">
+      {/* To Sispay */}
+      <TouchableOpacity
+        activeOpacity={0.8}
+        onPress={() => router.push("/transfer/ToSispay")}
+        className="flex flex-col"
+      >
+        <View
+          style={[{ backgroundColor: "rgba(3, 29, 66, 0.2)" }]}
+          className="flex items-center justify-center rounded-full h-[50px] w-[50px] 
             "
-          >
-            <Zocial name="persona" size={24} color={Colors.primary} />
-          </View>
-          <Text className="text-[12px] font-popp font-[500]">To Sispay</Text>
-        </TouchableOpacity>
-        {/* To Bank */}
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={() => router.push("/transfer/toBankAccount")}
-          className="flex flex-col"
         >
-          <View
-            style={[{ backgroundColor: "rgba(3, 29, 66, 0.2)" }]}
-            className="flex items-center justify-center rounded-full h-[50px] w-[50px] 
+          <Zocial name="persona" size={24} color={Colors.primary} />
+        </View>
+        <Text className="text-[12px] font-popp font-[500]">To Sispay</Text>
+      </TouchableOpacity>
+      {/* To Bank */}
+      <TouchableOpacity
+        activeOpacity={0.8}
+        onPress={() => router.push("/transfer/toBankAccount")}
+        className="flex flex-col"
+      >
+        <View
+          style={[{ backgroundColor: "rgba(3, 29, 66, 0.2)" }]}
+          className="flex items-center justify-center rounded-full h-[50px] w-[50px] 
             "
-          >
-            <MaterialCommunityIcons
-              name="greenhouse"
-              size={24}
-              color={Colors.primary}
-            />
-          </View>
-          <Text className="text-[12px] font-popp font-[500]">To Bank</Text>
-        </TouchableOpacity>
-        {/* Withdraw */}
-        <TouchableOpacity
-          onPress={() => router.push("/withdraw")}
-          activeOpacity={0.8}
-          className="flex flex-col"
         >
-          <View
-            style={[{ backgroundColor: "rgba(3, 29, 66, 0.2)" }]}
-            className="flex items-center justify-center rounded-full h-[50px] w-[50px] 
+          <MaterialCommunityIcons
+            name="greenhouse"
+            size={24}
+            color={Colors.primary}
+          />
+        </View>
+        <Text className="text-[12px] font-popp font-[500]">To Bank</Text>
+      </TouchableOpacity>
+      {/* Withdraw */}
+      <TouchableOpacity
+        onPress={() => router.push("/withdraw")}
+        activeOpacity={0.8}
+        className="flex flex-col"
+      >
+        <View
+          style={[{ backgroundColor: "rgba(3, 29, 66, 0.2)" }]}
+          className="flex items-center justify-center rounded-full h-[50px] w-[50px] 
             "
-          >
-            <MaterialCommunityIcons
-              name="bank-transfer"
-              size={30}
-              color={Colors.primary}
-            />
-          </View>
-          <Text className="text-[12px] font-popp font-[500] text-center">
-            Withdraw
-          </Text>
-        </TouchableOpacity>
-      </View>
+        >
+          <MaterialCommunityIcons
+            name="bank-transfer"
+            size={30}
+            color={Colors.primary}
+          />
+        </View>
+        <Text className="text-[12px] font-popp font-[500] text-center">
+          Withdraw
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 };

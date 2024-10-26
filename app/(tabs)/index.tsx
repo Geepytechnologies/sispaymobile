@@ -6,6 +6,7 @@ import {
   View,
   TouchableOpacity,
   Alert,
+  ScrollView,
 } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -18,7 +19,7 @@ import {
   MaterialIcons,
 } from "@expo/vector-icons";
 import { globalstyles } from "@/styles/common";
-import { useCallback, useEffect, useState } from "react";
+import { Key, useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/config/store";
 import accountService from "@/services/account.service";
@@ -70,7 +71,7 @@ export default function HomeScreen() {
     queryFn: () =>
       walletService.getTransactions(startDate, endDate, accountNumber, 1, 2),
   });
-  console.log(userTransactions);
+  // console.log(userTransactions.result);
   useFocusEffect(
     useCallback(() => {
       getUserAccount();
@@ -84,81 +85,99 @@ export default function HomeScreen() {
   }, []);
   return (
     <SafeAreaView className="p-[14px]">
-      {/* header */}
-      <View
-        className="px-[10px] py-[14px]"
-        style={[globalstyles.rowview, { justifyContent: "space-between" }]}
-      >
-        <View className="flex flex-row gap-[12px] ">
-          <Avatar />
-          <View style={[globalstyles.colview]}>
-            <Text className="text-[#000C20] font-[500] text-[13px]">Hello</Text>
-            <Text className="text-[#000C20] font-[700] text-[13px]">
-              {firstname} {lastname}
-            </Text>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* header */}
+        <View
+          className="px-[10px] py-[14px]"
+          style={[globalstyles.rowview, { justifyContent: "space-between" }]}
+        >
+          <View className="flex flex-row gap-[12px] ">
+            <Avatar />
+            <View style={[globalstyles.colview]}>
+              <Text className="text-[#000C20] font-[500] text-[13px]">
+                Hello
+              </Text>
+              <Text className="text-[#000C20] font-[700] text-[13px]">
+                {firstname} {lastname}
+              </Text>
+            </View>
+          </View>
+          <View style={[globalstyles.rowview, { gap: 10 }]}>
+            <FontAwesome name="qrcode" size={24} color="black" />
+            <EvilIcons name="bell" size={24} color="black" />
           </View>
         </View>
-        <View style={[globalstyles.rowview, { gap: 10 }]}>
-          <FontAwesome name="qrcode" size={24} color="black" />
-          <EvilIcons name="bell" size={24} color="black" />
-        </View>
-      </View>
-      {/* widget */}
-      <View className="flex flex-row items-center mt-5 justify-between px-5 bg-appblue rounded-[20px] min-h-[120px]">
-        <View className="flex flex-col gap-9">
-          <View className="flex flex-row items-center">
-            <Ionicons name="shield-checkmark-sharp" size={17} color="white" />
-            <Text className="text-white  ml-1 font-popp">
-              Available Balance
-            </Text>
-            <TouchableOpacity
-              className="p-2"
-              onPress={toggleBalance}
-              activeOpacity={0.8}
+        {/* widget */}
+        <View className="flex flex-row items-center mt-5 justify-between px-5 bg-appblue rounded-[20px] min-h-[120px]">
+          <View className="flex flex-col gap-9">
+            <View className="flex flex-row items-center">
+              <Ionicons name="shield-checkmark-sharp" size={17} color="white" />
+              <Text className="text-white  ml-1 font-popp">
+                Available Balance
+              </Text>
+              <TouchableOpacity
+                className="p-2"
+                onPress={toggleBalance}
+                activeOpacity={0.8}
+              >
+                <Feather
+                  suppressHighlighting
+                  name={balanceVisible ? "eye" : "eye-off"}
+                  size={17}
+                  color="white"
+                />
+              </TouchableOpacity>
+            </View>
+            <View style={[{ gap: 5 }]} className="flex flex-row items-center">
+              <Text className="text-white items-center">₦</Text>
+              <Text className="text-[20px] font-[700] text-white">
+                {balanceVisible ? userAccount?.balance : "*****"}
+              </Text>
+            </View>
+          </View>
+          <View className="flex flex-col gap-9">
+            <Link
+              href={"/(tabs)/transactions"}
+              suppressHighlighting={true}
+              className="text-white font-popp"
             >
-              <Feather
-                suppressHighlighting
-                name={balanceVisible ? "eye" : "eye-off"}
-                size={17}
-                color="white"
-              />
+              Transaction History {">"}
+            </Link>
+            <TouchableOpacity
+              className="bg-white rounded-[20px] px-3 py-2"
+              activeOpacity={0.9}
+            >
+              <Text>{"+"} Add Money</Text>
             </TouchableOpacity>
           </View>
-          <View style={[{ gap: 5 }]} className="flex flex-row items-center">
-            <Text className="text-white items-center">₦</Text>
-            <Text className="text-[20px] font-[700] text-white">
-              {balanceVisible ? userAccount?.balance : "*****"}
-            </Text>
+        </View>
+        {/* latest transactions */}
+        {!isLoading && (
+          <View className="bg-white px-3 pt-6 my-5 shadow-md rounded-xl">
+            {userTransactions.result
+              .sort(
+                (
+                  a: { transactionDate: string },
+                  b: { transactionDate: string }
+                ) =>
+                  Date.parse(b.transactionDate) - Date.parse(a.transactionDate)
+              )
+              .slice(0, 2)
+              .map((t: any, index: Key | null | undefined) => (
+                <SingleTransactionWidget key={index} transaction={t} />
+              ))}
           </View>
+        )}
+        <View
+          style={{ gap: 30 }}
+          className="bg-white px-3 py-6 my-5 shadow-md rounded-xl"
+        >
+          {/* Transfer */}
+          <TransferWidget />
+          {/* services */}
+          <ServiceWidget />
         </View>
-        <View className="flex flex-col gap-9">
-          <Link
-            href={"/(tabs)/transactions"}
-            suppressHighlighting={true}
-            className="text-white font-popp"
-          >
-            Transaction History {">"}
-          </Link>
-          <TouchableOpacity
-            className="bg-white rounded-[20px] px-3 py-2"
-            activeOpacity={0.9}
-          >
-            <Text>{"+"} Add Money</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-      {/* latest transactions */}
-      {!isLoading && (
-        <View className="bg-white px-3 pt-6 my-5 shadow-md rounded-xl">
-          {userTransactions.result.map((t: any, index: any) => (
-            <SingleTransactionWidget key={index} transaction={t} />
-          ))}
-        </View>
-      )}
-      {/* Transfer */}
-      <TransferWidget />
-      {/* services */}
-      <ServiceWidget />
+      </ScrollView>
     </SafeAreaView>
   );
 }

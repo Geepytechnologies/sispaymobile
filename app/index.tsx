@@ -4,7 +4,7 @@ import { Redirect } from "expo-router";
 type Props = {};
 
 const index = (props: Props) => {
-  return <Redirect href={"/billpayment/buydata"} />;
+  return <Redirect href={"/(tabs)"} />;
 };
 
 export default index;

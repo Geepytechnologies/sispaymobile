@@ -38,10 +38,10 @@ const SingleTransactionWidget = ({ transaction }: Props) => {
       return (
         <View
           style={[{ backgroundColor: "rgba(3, 29, 66, 0.2)" }]}
-          className="flex items-center justify-center rounded-full h-[50px] w-[50px] 
+          className="flex items-center justify-center rounded-full h-[30px] w-[30px] 
           "
         >
-          <MaterialIcons name="call-made" size={24} color={Colors.primary} />
+          <MaterialIcons name="call-made" size={20} color={Colors.primary} />
         </View>
       );
     }
@@ -53,10 +53,10 @@ const SingleTransactionWidget = ({ transaction }: Props) => {
       return (
         <View
           style={[{ backgroundColor: "rgba(3, 29, 66, 0.2)" }]}
-          className="flex items-center justify-center rounded-full h-[50px] w-[50px] 
+          className="flex items-center justify-center rounded-full h-[30px] w-[30px] 
             "
         >
-          <MaterialIcons name="network-wifi" size={24} color={Colors.primary} />
+          <MaterialIcons name="network-wifi" size={20} color={Colors.primary} />
         </View>
       );
     }
@@ -68,10 +68,10 @@ const SingleTransactionWidget = ({ transaction }: Props) => {
       return (
         <View
           style={[{ backgroundColor: "rgba(3, 29, 66, 0.2)" }]}
-          className="flex items-center justify-center rounded-full h-[50px] w-[50px] 
+          className="flex items-center justify-center rounded-full h-[30px] w-[30px] 
             "
         >
-          <Feather name="tv" size={24} color={Colors.primary} />
+          <Feather name="tv" size={20} color={Colors.primary} />
         </View>
       );
     }
@@ -82,10 +82,10 @@ const SingleTransactionWidget = ({ transaction }: Props) => {
       return (
         <View
           style={[{ backgroundColor: "rgba(3, 29, 66, 0.2)" }]}
-          className="flex items-center justify-center rounded-full h-[50px] w-[50px] 
+          className="flex items-center justify-center rounded-full h-[30px] w-[30px] 
             "
         >
-          <Feather name="tv" size={24} color={Colors.primary} />
+          <Feather name="tv" size={20} color={Colors.primary} />
         </View>
       );
     }
@@ -112,7 +112,7 @@ const SingleTransactionWidget = ({ transaction }: Props) => {
         <View style={[globalstyles.rowview, { gap: 15 }]}>
           <View>{getIconToRender()}</View>
           <View>
-            <Text className="font-[700] text-lg">
+            <Text className="font-[700]">
               {transaction[TransactionType].receiver?.vendType}
             </Text>
             <Text className="text-gray-500">
@@ -122,15 +122,19 @@ const SingleTransactionWidget = ({ transaction }: Props) => {
         </View>
         <View style={[globalstyles.colview, { gap: 4 }]}>
           <Text>₦{transaction[TransactionType].amount}</Text>
-          <Text
+          <View
             className={`${
               getStatusColor(transaction[TransactionType].status)?.bg
-            } ${
-              getStatusColor(transaction[TransactionType].status)?.text
-            } capitalize p-1 rounded-md text-sm`}
+            }  rounded-md p-1`}
           >
-            {transaction[TransactionType].status}
-          </Text>
+            <Text
+              className={` ${
+                getStatusColor(transaction[TransactionType].status)?.text
+              } capitalize text-sm`}
+            >
+              {transaction[TransactionType].status}
+            </Text>
+          </View>
         </View>
       </View>
       <View className="mt-4" style={[globalstyles.hr]}></View>

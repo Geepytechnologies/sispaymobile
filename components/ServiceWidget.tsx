@@ -8,47 +8,43 @@ type Props = {};
 
 const ServiceWidget = (props: Props) => {
   return (
-    <View className="bg-white px-3 py-6 my-5 shadow-md rounded-xl">
-      <View className="flex flex-row justify-between">
-        {/* Airtime */}
-        <Link suppressHighlighting href={"/billpayment"}>
-          <View className="flex flex-col">
-            <View
-              style={[{ backgroundColor: "rgba(3, 29, 66, 0.2)" }]}
-              className="flex items-center justify-center rounded-full h-[50px] w-[50px] 
+    <View className="flex flex-row justify-between">
+      {/* Airtime */}
+      <Link suppressHighlighting href={"/billpayment"}>
+        <View className="flex flex-col">
+          <View
+            style={[{ backgroundColor: "rgba(3, 29, 66, 0.2)" }]}
+            className="flex items-center justify-center rounded-full h-[50px] w-[50px] 
             "
-            >
-              <MaterialIcons
-                name="call-made"
-                size={24}
-                color={Colors.primary}
-              />
-            </View>
-            <Text className="text-[12px] font-popp font-[500] text-center">
-              Airtime
-            </Text>
+          >
+            <MaterialIcons name="call-made" size={24} color={Colors.primary} />
           </View>
-        </Link>
-        {/* Data */}
-        <Link suppressHighlighting href={"/billpayment/buydata"}>
-          <View className="flex flex-col">
-            <View
-              style={[{ backgroundColor: "rgba(3, 29, 66, 0.2)" }]}
-              className="flex items-center justify-center rounded-full h-[50px] w-[50px] 
+          <Text className="text-[12px] font-popp font-[500] text-center">
+            Airtime
+          </Text>
+        </View>
+      </Link>
+      {/* Data */}
+      <Link suppressHighlighting href={"/billpayment/buydata"}>
+        <View className="flex flex-col">
+          <View
+            style={[{ backgroundColor: "rgba(3, 29, 66, 0.2)" }]}
+            className="flex items-center justify-center rounded-full h-[50px] w-[50px] 
             "
-            >
-              <MaterialIcons
-                name="network-wifi"
-                size={24}
-                color={Colors.primary}
-              />
-            </View>
-            <Text className="text-[12px] font-popp font-[500] text-center">
-              Data
-            </Text>
+          >
+            <MaterialIcons
+              name="network-wifi"
+              size={24}
+              color={Colors.primary}
+            />
           </View>
-        </Link>
-        {/* Tv */}
+          <Text className="text-[12px] font-popp font-[500] text-center">
+            Data
+          </Text>
+        </View>
+      </Link>
+      {/* Tv */}
+      <Link suppressHighlighting href={"/billpayment/tv"}>
         <View className="flex flex-col">
           <View
             style={[{ backgroundColor: "rgba(3, 29, 66, 0.2)" }]}
@@ -61,19 +57,23 @@ const ServiceWidget = (props: Props) => {
             Tv
           </Text>
         </View>
-        {/* Betting */}
-        <View className="flex flex-col">
-          <View
-            style={[{ backgroundColor: "rgba(3, 29, 66, 0.2)" }]}
-            className="flex items-center justify-center rounded-full h-[50px] w-[50px] 
+      </Link>
+      {/* Electricity */}
+      <View className="flex flex-col">
+        <View
+          style={[{ backgroundColor: "rgba(3, 29, 66, 0.2)" }]}
+          className="flex items-center justify-center rounded-full h-[50px] w-[50px] 
             "
-          >
-            <Ionicons name="football-sharp" size={24} color={Colors.primary} />
-          </View>
-          <Text className="text-[12px] font-popp font-[500] text-center">
-            Betting
-          </Text>
+        >
+          <MaterialIcons
+            name="electric-bolt"
+            size={24}
+            color={Colors.primary}
+          />
         </View>
+        <Text className="text-[12px] font-popp font-[500] text-center">
+          Electricity
+        </Text>
       </View>
     </View>
   );

@@ -1,6 +1,7 @@
 import { axiosInstance } from "@/config/axios";
 import {
   PurchaseAirtimeDTO,
+  PurchaseCableTvDTO,
   PurchaseDataDTO,
   PurchaseVtuDataDTO,
 } from "@/types/billpayment";
@@ -77,7 +78,7 @@ class BillPaymentService {
         `/BillPayment/ServiceCategory/CableTV`
       );
 
-      return response.data;
+      return response.data.result;
     } catch (error) {
       console.error("Error fetching cabletv service category:", error);
       throw error;
@@ -89,7 +90,7 @@ class BillPaymentService {
         `/BillPayment/ServiceCategory/UtilityBill`
       );
 
-      return response.data;
+      return response.data.result;
     } catch (error) {
       console.error("Error fetching utilitybill service category:", error);
       throw error;
@@ -136,6 +137,19 @@ class BillPaymentService {
 
       return response.data;
     } catch (error) {}
+  }
+  async PurchaseCableTv(details: PurchaseCableTvDTO) {
+    try {
+      const response = await axiosInstance.post(
+        `/BillPayment/CableTvSubscription`,
+        details
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Error purchasing cabletv:", error);
+      throw error;
+    }
   }
 }
 

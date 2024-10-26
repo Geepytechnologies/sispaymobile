@@ -57,7 +57,7 @@ interface DataCategory {
   logoUrl: any;
 }
 
-const renderBackdrop = (props: any) => (
+export const renderBackdrop = (props: any) => (
   <BottomSheetBackdrop
     {...props}
     disappearsOnIndex={-1}
