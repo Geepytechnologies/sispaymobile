@@ -38,57 +38,92 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/config/store";
 import { ScreenDimensions } from "@/constants/Dimensions";
 import AirtimeTopUpwidget from "@/components/billpayment/AirtimeTopUpwidget";
-import { PurchaseAirtimeDTO } from "@/types/billpayment";
+import {
+  PurchaseAirtimeDTO,
+  PurchaseDataDTO,
+  PurchaseVtuDataDTO,
+} from "@/types/billpayment";
 import SuccessPayment from "@/components/billpayment/SuccessPayment";
 import axios from "axios";
 import Toast from "react-native-toast-message";
+import DataTopUPWidget from "@/components/billpayment/DataTopUPWidget";
+import DataTopUpDetailswidget from "@/components/billpayment/DataTopUpDetailswidget";
+
 type Props = {};
 
-const Airtime = (props: Props) => {
+interface DataCategory {
+  id: string;
+  name: string;
+  logoUrl: any;
+}
+
+const renderBackdrop = (props: any) => (
+  <BottomSheetBackdrop
+    {...props}
+    disappearsOnIndex={-1}
+    appearsOnIndex={0}
+    opacity={0.7} // You can customize the opacity here
+  />
+);
+
+const buydata = (props: Props) => {
   const { currentuser } = useSelector((state: RootState) => state.user);
   const { userAccount } = useSelector((state: RootState) => state.account);
   // const { contacts, getContacts } = useContacts();
   const snapPoints = ["40%"];
   const [isModalVisible, setModalVisible] = useState(false);
   const [isContactsModalVisible, setIsContactsModalVisible] = useState(false);
-  const [selectedPhone, setSelectedPhone] = useState(currentuser?.phoneNumber);
+  const [selectedPhone, setSelectedPhone] = useState<string | undefined>(
+    currentuser?.phoneNumber
+  );
+  const [phoneError, setPhoneError] = useState(!selectedPhone);
   const [successModal, setSuccessModal] = useState(false);
   const [amount, setAmount] = useState("");
   const [purchaseLoading, setPurchaseLoading] = useState(false);
+  const [hotDataDetails, setHotDataDetails] = useState({
+    network: "",
+    dataPlan: "",
+    amount: "",
+  });
+  const [normalDataDetails, setNormalDataDetails] = useState({
+    bundleCode: "",
+    amount: "",
+    serviceCategoryId: "",
+  });
+  const [DataCategory, setDataCategory] = useState<DataCategory | null>(null);
+  const [contacts, setContacts] = useState<Contacts.Contact[]>([]);
+  const [permissionGranted, setPermissionGranted] = useState(false);
 
-  interface AirtimeCategory {
-    id: string;
-    name: string;
-    logoUrl: any;
-  }
+  const bottomsheetRef = useRef<BottomSheet>(null);
+  const contactsRef = useRef<BottomSheet>(null);
+  const hotdataRef = useRef<BottomSheet>(null);
+  const normaldataRef = useRef<BottomSheet>(null);
+
   const toggleModal = () => {
     setSuccessModal(!successModal);
   };
   const {
     isLoading,
-    data: airtimeCategories,
+    data: dataCategories,
     error,
     refetch,
   } = useQuery({
-    queryKey: ["airtimecategories"],
-    queryFn: billpaymentService.getAirtimeServiceCategory,
+    queryKey: ["datacategories"],
+    queryFn: billpaymentService.getDataServiceCategory,
   });
-  const [airtimeCategory, setAirtimeCategory] =
-    useState<AirtimeCategory | null>(null);
 
   useEffect(() => {
-    if (airtimeCategories && airtimeCategories.length > 0) {
-      setAirtimeCategory(airtimeCategories[0]);
+    if (dataCategories && dataCategories.length > 0) {
+      //   console.log(dataCategories);
+      setDataCategory(dataCategories[0]);
     }
-  }, [airtimeCategories]);
-  const [contacts, setContacts] = useState<Contacts.Contact[]>([]);
-  const [permissionGranted, setPermissionGranted] = useState(false);
+  }, [dataCategories]);
 
   useEffect(() => {
     const getContactsPermission = async () => {
       const { status } = await Contacts.requestPermissionsAsync();
       if (status === "granted") {
-        // console.log(status);
+        console.log(status);
         const { data } = await Contacts.getContactsAsync();
         const sortedContacts = [...data].sort((a: any, b: any) =>
           a?.firstName?.localeCompare(b?.firstName)
@@ -100,11 +135,19 @@ const Airtime = (props: Props) => {
     getContactsPermission();
   }, []);
 
+  // console.log("datacat", DataCategory);
+
   const handlePhoneSelected = (item: Contacts.Contact) => {
     if (item.phoneNumbers) {
       setSelectedPhone(item.phoneNumbers[0].number);
     }
     closeContactsModal();
+  };
+  const handlePhoneOnChange = (text: string) => {
+    if (text.length == 11) {
+      setPhoneError(false);
+      setSelectedPhone(text);
+    }
   };
   const renderContactItem = ({ item }: { item: Contacts.Contact }) => {
     return (
@@ -128,8 +171,13 @@ const Airtime = (props: Props) => {
       </TouchableOpacity>
     );
   };
-  const bottomsheetRef = useRef<BottomSheet>(null);
-  const contactsRef = useRef<BottomSheet>(null);
+
+  const showhotdatamodal = () => {
+    hotdataRef.current?.expand();
+  };
+  const shownormaldatamodal = () => {
+    normaldataRef.current?.expand();
+  };
 
   const showmodal = () => {
     bottomsheetRef.current?.expand();
@@ -140,37 +188,98 @@ const Airtime = (props: Props) => {
   const closeContactsModal = () => {
     contactsRef.current?.close();
   };
-  const handleAirtimeCategory = (item: any) => {
+  const handleDataCategory = (item: any) => {
     bottomsheetRef.current?.close();
-    setAirtimeCategory(item);
+    setDataCategory(item);
   };
-  const renderBackdrop = (props: any) => (
-    <BottomSheetBackdrop
-      {...props}
-      disappearsOnIndex={-1}
-      appearsOnIndex={0}
-      opacity={0.7}
-    />
-  );
-  const buyAirtime = async () => {
+
+  const buyNormalData = async () => {
     if (selectedPhone == undefined || selectedPhone == null) {
+      Toast.show({
+        type: "info",
+        text1: "Attention!!!",
+        text2: "Input A Phone Number",
+      });
       return;
     }
-    if (airtimeCategory !== null) {
-      if (airtimeCategory.id == undefined || airtimeCategory.id == null) {
+    if (DataCategory !== null) {
+      if (DataCategory.id == undefined || DataCategory.id == null) {
+        Toast.show({
+          type: "info",
+          text1: "Attention!!!",
+          text2: "Choose A Data Category",
+        });
         return;
       }
     }
-    const airtimeDetails: PurchaseAirtimeDTO = {
+    const dataDetails: PurchaseDataDTO = {
       accountNumber: userAccount?.accountNumber,
-      amount: Number(amount),
+      amount: Number(normalDataDetails.amount),
+      bundleCode: normalDataDetails.bundleCode,
       phoneNumber: selectedPhone,
-      serviceCategoryId: airtimeCategory?.id,
+      serviceCategoryId: DataCategory?.id,
     };
-    console.log(airtimeDetails);
+    console.log(dataDetails);
     setPurchaseLoading(true);
     try {
-      const res = await billpaymentService.purchaseAirtime(airtimeDetails);
+      const res = await billpaymentService.purchaseData(dataDetails);
+      console.log(res.result);
+      if (res.result) {
+        toggleModal();
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        if (
+          error.response?.status == 403 &&
+          error.response.data.message == "User hasn't completed KYC"
+        ) {
+          Toast.show({
+            type: "info",
+            text1: "Attention!!!",
+            text2: "You Haven't Completed Your KYC",
+          });
+        }
+        console.log(error.message);
+        if (error.response) {
+          console.log(error.response.data);
+          console.log(error.response.status);
+          console.log(error.response.headers);
+        }
+      }
+    } finally {
+      setPurchaseLoading(false);
+    }
+  };
+  const buyHotData = async () => {
+    if (selectedPhone == undefined || selectedPhone == null) {
+      Toast.show({
+        type: "info",
+        text1: "Attention!!!",
+        text2: "Input A Phone Number",
+      });
+      return;
+    }
+    if (DataCategory !== null) {
+      if (DataCategory.id == undefined || DataCategory.id == null) {
+        Toast.show({
+          type: "info",
+          text1: "Attention!!!",
+          text2: "Choose A Data Category",
+        });
+        return;
+      }
+    }
+    const dataDetails: PurchaseVtuDataDTO = {
+      accountNumber: userAccount?.accountNumber,
+      amount: hotDataDetails.amount,
+      dataPlan: normalDataDetails.bundleCode,
+      phone: selectedPhone,
+      network: DataCategory?.name,
+    };
+    console.log(dataDetails);
+    setPurchaseLoading(true);
+    try {
+      const res = await billpaymentService.PurchaseVTUData(dataDetails);
       console.log(res.result);
       if (res.result) {
         toggleModal();
@@ -202,7 +311,7 @@ const Airtime = (props: Props) => {
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <SafeAreaView style={{ flex: 1, padding: 16, backgroundColor: "white" }}>
         <Toast />
-        <DynamicHeader title="Airtime" />
+        <DynamicHeader title="Data" />
         <View
           style={[
             globalstyles.rowview,
@@ -211,12 +320,12 @@ const Airtime = (props: Props) => {
         >
           <View style={[globalstyles.rowview, { gap: 15 }]}>
             <TouchableOpacity
-              key={airtimeCategory && airtimeCategory.id}
+              key={DataCategory && DataCategory.id}
               style={[globalstyles.rowview, { gap: 4 }]}
-              onPress={showmodal}
+              onPress={() => showmodal()}
             >
               <Image
-                source={{ uri: airtimeCategory && airtimeCategory.logoUrl }}
+                source={{ uri: DataCategory && DataCategory.logoUrl }}
                 style={{ height: 40, width: 40, objectFit: "cover" }}
                 className="rounded-full "
               />
@@ -226,8 +335,8 @@ const Airtime = (props: Props) => {
               keyboardType="numeric"
               placeholderTextColor={"black"}
               placeholder={selectedPhone || "Recipient Phone"}
-              className="font-[700] text-[20px] font-popp  w-[200px]"
-              onChangeText={(text) => setSelectedPhone(text)}
+              className="font-[700] text-[14px] font-popp  w-[200px]"
+              onChangeText={(text) => handlePhoneOnChange(text)}
               value={selectedPhone}
               maxLength={11}
             />
@@ -239,27 +348,42 @@ const Airtime = (props: Props) => {
             color={Colors.primary}
           />
         </View>
-        <AirtimeTopUpwidget
-          loading={purchaseLoading}
-          purchaseAirtime={buyAirtime}
-          amount={amount}
-          setAmount={setAmount}
+        {/* Error detail */}
+        {phoneError && (
+          <View style={{ gap: 8, marginBottom: 5 }}>
+            <View className="bg-red-300 w-full h-[1px]"></View>
+            <Text className="text-red-400 text-[12px]">
+              please enter the correct phone number
+            </Text>
+          </View>
+        )}
+        <DataTopUPWidget
+          phone={selectedPhone}
+          setPhoneError={setPhoneError}
+          setNormalDataDetails={setNormalDataDetails}
+          setHotDataDetails={setHotDataDetails}
+          shownormaldatamodal={shownormaldatamodal}
+          showhotdatamodal={showhotdatamodal}
+          name={DataCategory?.name}
+          category={DataCategory?.id}
         />
         {/* network options sheet */}
         <BottomSheet
           backdropComponent={renderBackdrop}
           index={-1}
           ref={bottomsheetRef}
-          snapPoints={["45%"]}
+          snapPoints={snapPoints}
         >
-          <BottomSheetView style={{ paddingTop: 20 }}>
+          <BottomSheetView
+            style={{ maxHeight: ScreenDimensions.screenHeight * 0.7 }}
+          >
             <View className="px-5 pt-9 justify-center h-full">
               {!isLoading &&
-                airtimeCategories.map((item: any, index: any) => (
+                dataCategories.map((item: any, index: any) => (
                   <TouchableOpacity
                     className="flex flex-row items-center justify-between mb-5 p-3 rounded-lg bg-[#d5d8e5]"
                     key={item.id}
-                    onPress={() => handleAirtimeCategory(item)}
+                    onPress={() => handleDataCategory(item)}
                   >
                     <View className="flex flex-row items-center gap-3">
                       <Image
@@ -272,7 +396,7 @@ const Airtime = (props: Props) => {
 
                     <MaterialCommunityIcons
                       name={
-                        airtimeCategory && airtimeCategory.name == item.name
+                        DataCategory && DataCategory.name == item.name
                           ? "check-circle"
                           : "checkbox-blank-circle-outline"
                       }
@@ -305,6 +429,44 @@ const Airtime = (props: Props) => {
           </BottomSheetView>
         </BottomSheet>
 
+        {/* hot data sheet */}
+        <BottomSheet
+          backdropComponent={renderBackdrop}
+          index={-1}
+          ref={hotdataRef}
+          snapPoints={["45%"]}
+        >
+          <BottomSheetView
+            style={{ maxHeight: ScreenDimensions.screenHeight * 0.6 }}
+          >
+            <DataTopUpDetailswidget
+              purchaseLoading={purchaseLoading}
+              buydata={buyHotData}
+              amount={hotDataDetails.amount}
+              logoUrl={DataCategory?.logoUrl}
+              productName={DataCategory?.name}
+            />
+          </BottomSheetView>
+        </BottomSheet>
+        {/* normal data sheet */}
+        <BottomSheet
+          backdropComponent={renderBackdrop}
+          index={-1}
+          ref={normaldataRef}
+          snapPoints={["45%"]}
+        >
+          <BottomSheetView
+            style={{ maxHeight: ScreenDimensions.screenHeight * 0.6 }}
+          >
+            <DataTopUpDetailswidget
+              purchaseLoading={purchaseLoading}
+              buydata={buyNormalData}
+              amount={normalDataDetails.amount}
+              logoUrl={DataCategory?.logoUrl}
+              productName={DataCategory?.name}
+            />
+          </BottomSheetView>
+        </BottomSheet>
         <Modal
           style={{ margin: 0 }}
           onBackdropPress={toggleModal}
@@ -320,6 +482,6 @@ const Airtime = (props: Props) => {
   );
 };
 
-export default Airtime;
+export default buydata;
 
 const styles = StyleSheet.create({});

@@ -11,7 +11,7 @@ const ServiceWidget = (props: Props) => {
     <View className="bg-white px-3 py-6 my-5 shadow-md rounded-xl">
       <View className="flex flex-row justify-between">
         {/* Airtime */}
-        <Link href={"/billpayment"}>
+        <Link suppressHighlighting href={"/billpayment"}>
           <View className="flex flex-col">
             <View
               style={[{ backgroundColor: "rgba(3, 29, 66, 0.2)" }]}
@@ -30,22 +30,24 @@ const ServiceWidget = (props: Props) => {
           </View>
         </Link>
         {/* Data */}
-        <View className="flex flex-col">
-          <View
-            style={[{ backgroundColor: "rgba(3, 29, 66, 0.2)" }]}
-            className="flex items-center justify-center rounded-full h-[50px] w-[50px] 
+        <Link suppressHighlighting href={"/billpayment/buydata"}>
+          <View className="flex flex-col">
+            <View
+              style={[{ backgroundColor: "rgba(3, 29, 66, 0.2)" }]}
+              className="flex items-center justify-center rounded-full h-[50px] w-[50px] 
             "
-          >
-            <MaterialIcons
-              name="network-wifi"
-              size={24}
-              color={Colors.primary}
-            />
+            >
+              <MaterialIcons
+                name="network-wifi"
+                size={24}
+                color={Colors.primary}
+              />
+            </View>
+            <Text className="text-[12px] font-popp font-[500] text-center">
+              Data
+            </Text>
           </View>
-          <Text className="text-[12px] font-popp font-[500] text-center">
-            Data
-          </Text>
-        </View>
+        </Link>
         {/* Tv */}
         <View className="flex flex-col">
           <View

@@ -68,6 +68,17 @@ class WalletService {
       throw error;
     }
   }
+  async GetBankList() {
+    try {
+      const response = await axios.get(
+        `${CONSTANTS.APIURL}/wallet/transfer/banklists`
+      );
+      return response.data.result;
+    } catch (error) {
+      console.error("Error fetching bank list:", error);
+      throw error;
+    }
+  }
 }
 
 export default new WalletService();

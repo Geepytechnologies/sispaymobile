@@ -5,11 +5,11 @@ export interface PurchaseAirtimeDTO {
   accountNumber: string | undefined;
 }
 export interface PurchaseDataDTO {
-  serviceCategoryId: string;
+  serviceCategoryId: string | undefined;
   bundleCode: string;
   amount: number;
   phoneNumber: string;
-  accountNumber: string;
+  accountNumber: string | undefined;
 }
 export interface PurchaseCableTvDTO {
   serviceCategoryId: string;
@@ -24,4 +24,11 @@ export interface PurchaseUtilityBillDTO {
   amount: number;
   meterNumber: string;
   accountNumber: string;
+}
+export interface PurchaseVtuDataDTO {
+  phone: string;
+  network: string | undefined;
+  dataPlan: string;
+  accountNumber: string | undefined;
+  amount: string | undefined;
 }
