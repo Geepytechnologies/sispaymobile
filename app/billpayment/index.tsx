@@ -177,6 +177,13 @@ const Airtime = (props: Props) => {
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
+        if (error.response?.status == 400) {
+          Toast.show({
+            type: "error",
+            text1: "Attention!!!",
+            text2: error.response.data.message,
+          });
+        }
         if (
           error.response?.status == 403 &&
           error.response.data.message == "User hasn't completed KYC"
@@ -200,122 +207,132 @@ const Airtime = (props: Props) => {
   };
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <SafeAreaView style={{ flex: 1, padding: 16, backgroundColor: "white" }}>
-        <Toast />
-        <DynamicHeader title="Airtime" />
-        <View
-          style={[
-            globalstyles.rowview,
-            { justifyContent: "space-between", marginVertical: 20 },
-          ]}
+      <>
+        <View className="z-50">
+          <Toast />
+        </View>
+        <SafeAreaView
+          style={{ flex: 1, padding: 16, backgroundColor: "white" }}
         >
-          <View style={[globalstyles.rowview, { gap: 15 }]}>
-            <TouchableOpacity
-              key={airtimeCategory && airtimeCategory.id}
-              style={[globalstyles.rowview, { gap: 4 }]}
-              onPress={showmodal}
-            >
-              <Image
-                source={{ uri: airtimeCategory && airtimeCategory.logoUrl }}
-                style={{ height: 40, width: 40, objectFit: "cover" }}
-                className="rounded-full "
+          <DynamicHeader title="Airtime" />
+          <View
+            style={[
+              globalstyles.rowview,
+              { justifyContent: "space-between", marginVertical: 20 },
+            ]}
+          >
+            <View style={[globalstyles.rowview, { gap: 15 }]}>
+              <TouchableOpacity
+                key={airtimeCategory && airtimeCategory.id}
+                style={[globalstyles.rowview, { gap: 4 }]}
+                onPress={showmodal}
+              >
+                <Image
+                  source={{ uri: airtimeCategory && airtimeCategory.logoUrl }}
+                  style={{ height: 40, width: 40, objectFit: "cover" }}
+                  className="rounded-full "
+                />
+                <FontAwesome6
+                  name="caret-up"
+                  size={18}
+                  color={Colors.primary}
+                />
+              </TouchableOpacity>
+              <TextInput
+                keyboardType="numeric"
+                placeholderTextColor={"black"}
+                placeholder={selectedPhone || "Recipient Phone"}
+                className="font-[700] text-[20px] font-popp  w-[200px]"
+                onChangeText={(text) => setSelectedPhone(text)}
+                value={selectedPhone}
+                maxLength={11}
               />
-              <FontAwesome6 name="caret-up" size={18} color={Colors.primary} />
-            </TouchableOpacity>
-            <TextInput
-              keyboardType="numeric"
-              placeholderTextColor={"black"}
-              placeholder={selectedPhone || "Recipient Phone"}
-              className="font-[700] text-[20px] font-popp  w-[200px]"
-              onChangeText={(text) => setSelectedPhone(text)}
-              value={selectedPhone}
-              maxLength={11}
+            </View>
+            <FontAwesome
+              onPress={showcontactsmodal}
+              name="user-circle"
+              size={24}
+              color={Colors.primary}
             />
           </View>
-          <FontAwesome
-            onPress={showcontactsmodal}
-            name="user-circle"
-            size={24}
-            color={Colors.primary}
+          <AirtimeTopUpwidget
+            loading={purchaseLoading}
+            purchaseAirtime={buyAirtime}
+            amount={amount}
+            setAmount={setAmount}
           />
-        </View>
-        <AirtimeTopUpwidget
-          loading={purchaseLoading}
-          purchaseAirtime={buyAirtime}
-          amount={amount}
-          setAmount={setAmount}
-        />
-        {/* network options sheet */}
-        <BottomSheet
-          backdropComponent={renderBackdrop}
-          index={-1}
-          ref={bottomsheetRef}
-          snapPoints={["45%"]}
-        >
-          <BottomSheetView style={{ paddingTop: 20 }}>
-            <View className="px-5 pt-9 justify-center h-full">
-              {!isLoading &&
-                airtimeCategories.map((item: any, index: any) => (
-                  <TouchableOpacity
-                    className="flex flex-row items-center justify-between mb-5 p-3 rounded-lg bg-[#d5d8e5]"
-                    key={item.id}
-                    onPress={() => handleAirtimeCategory(item)}
-                  >
-                    <View className="flex flex-row items-center gap-3">
-                      <Image
-                        source={{ uri: item.logoUrl }}
-                        style={{ height: 40, width: 40, objectFit: "cover" }}
-                        className="rounded-full "
-                      />
-                      <Text>{item.name}</Text>
-                    </View>
-
-                    <MaterialCommunityIcons
-                      name={
-                        airtimeCategory && airtimeCategory.name == item.name
-                          ? "check-circle"
-                          : "checkbox-blank-circle-outline"
-                      }
-                      size={20}
-                      color={Colors.primary}
-                    />
-                  </TouchableOpacity>
-                ))}
-            </View>
-          </BottomSheetView>
-        </BottomSheet>
-
-        {/* contacts sheet */}
-        <BottomSheet
-          backdropComponent={renderBackdrop}
-          index={-1}
-          ref={contactsRef}
-          snapPoints={snapPoints}
-        >
-          <BottomSheetView
-            style={{ maxHeight: ScreenDimensions.screenHeight * 0.8 }}
+          {/* network options sheet */}
+          <BottomSheet
+            backdropComponent={renderBackdrop}
+            index={-1}
+            ref={bottomsheetRef}
+            snapPoints={["45%"]}
           >
-            <View style={{ padding: 20 }}>
-              <Text className="text-center text-appblue mb-4 text-lg">
-                Contacts
-              </Text>
+            <BottomSheetView style={{ paddingTop: 20 }}>
+              <View className="px-5 pt-9 justify-center h-full">
+                {!isLoading &&
+                  airtimeCategories.map((item: any, index: any) => (
+                    <TouchableOpacity
+                      className="flex flex-row items-center justify-between mb-5 p-3 rounded-lg bg-[#d5d8e5]"
+                      key={item.id}
+                      onPress={() => handleAirtimeCategory(item)}
+                    >
+                      <View className="flex flex-row items-center gap-3">
+                        <Image
+                          source={{ uri: item.logoUrl }}
+                          style={{ height: 40, width: 40, objectFit: "cover" }}
+                          className="rounded-full "
+                        />
+                        <Text>{item.name}</Text>
+                      </View>
 
-              <FlatList data={contacts} renderItem={renderContactItem} />
-            </View>
-          </BottomSheetView>
-        </BottomSheet>
+                      <MaterialCommunityIcons
+                        name={
+                          airtimeCategory && airtimeCategory.name == item.name
+                            ? "check-circle"
+                            : "checkbox-blank-circle-outline"
+                        }
+                        size={20}
+                        color={Colors.primary}
+                      />
+                    </TouchableOpacity>
+                  ))}
+              </View>
+            </BottomSheetView>
+          </BottomSheet>
 
-        <Modal
-          style={{ margin: 0 }}
-          onBackdropPress={toggleModal}
-          swipeDirection={["down"]}
-          onSwipeComplete={toggleModal}
-          propagateSwipe={true}
-          isVisible={successModal}
-        >
-          <SuccessPayment amount={amount} />
-        </Modal>
-      </SafeAreaView>
+          {/* contacts sheet */}
+          <BottomSheet
+            backdropComponent={renderBackdrop}
+            index={-1}
+            ref={contactsRef}
+            snapPoints={snapPoints}
+          >
+            <BottomSheetView
+              style={{ maxHeight: ScreenDimensions.screenHeight * 0.8 }}
+            >
+              <View style={{ padding: 20 }}>
+                <Text className="text-center text-appblue mb-4 text-lg">
+                  Contacts
+                </Text>
+
+                <FlatList data={contacts} renderItem={renderContactItem} />
+              </View>
+            </BottomSheetView>
+          </BottomSheet>
+
+          <Modal
+            style={{ margin: 0 }}
+            onBackdropPress={toggleModal}
+            swipeDirection={["down"]}
+            onSwipeComplete={toggleModal}
+            propagateSwipe={true}
+            isVisible={successModal}
+          >
+            <SuccessPayment amount={amount} />
+          </Modal>
+        </SafeAreaView>
+      </>
     </TouchableWithoutFeedback>
   );
 };

@@ -27,6 +27,7 @@ import { renderBackdrop } from "./buydata";
 import axios from "axios";
 import { PurchaseCableTvDTO } from "@/types/billpayment";
 import { Dropdown } from "react-native-element-dropdown";
+import { useBuyCableTv } from "@/queries/billpayment";
 
 type Props = {};
 interface ITvCategory {
@@ -49,6 +50,18 @@ const tv = (props: Props) => {
   });
   const [tvInputLabel, setTvInputLabel] = useState<any>();
   const [isFocus, setIsFocus] = useState(false);
+
+  const { buyCableTv, buyCableTvLoading } = useBuyCableTv({
+    onSuccess: (data) => {
+      setSuccessModal(true);
+      setPurchaseLoading(false);
+      refetch();
+    },
+    onError: (error) => {
+      setPurchaseLoading(false);
+      console.log("error", error);
+    },
+  });
 
   const {
     isLoading,
@@ -74,12 +87,14 @@ const tv = (props: Props) => {
   const getProductCategories = async () => {
     try {
       const res = await billpaymentService.getProductCategories(tvCategory?.id);
+      console.log("product categories", res);
       setProductCategories(res);
     } catch (error) {}
   };
   useEffect(() => {
     getProductCategories();
   }, [tvCategory]);
+
   const toggleModal = () => {
     setSuccessModal(!successModal);
   };
@@ -97,7 +112,7 @@ const tv = (props: Props) => {
       bundleCode: item.value.bundleCode,
     });
   };
-  const buyCableTv = async () => {
+  const handleCableTv = async () => {
     if (smartCardNumber == "") {
       Toast.show({
         type: "error",
@@ -120,34 +135,7 @@ const tv = (props: Props) => {
       amount: Number(tvInputDetails.amount),
       accountNumber: "",
     };
-    try {
-      const res = await billpaymentService.PurchaseCableTv(tvDetails);
-      console.log(res.result);
-      if (res.result) {
-        toggleModal();
-      }
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        if (
-          error.response?.status == 403 &&
-          error.response.data.message == "User hasn't completed KYC"
-        ) {
-          Toast.show({
-            type: "info",
-            text1: "Attention!!!",
-            text2: "You Haven't Completed Your KYC",
-          });
-        }
-        console.log(error.message);
-        if (error.response) {
-          console.log(error.response.data);
-          console.log(error.response.status);
-          console.log(error.response.headers);
-        }
-      }
-    } finally {
-      setPurchaseLoading(false);
-    }
+    buyCableTv(tvDetails);
   };
   return (
     <TouchableNativeFeedback onPress={Keyboard.dismiss}>
@@ -242,7 +230,7 @@ const tv = (props: Props) => {
           )}
         </View>
         <TouchableOpacity
-          onPress={buyCableTv}
+          onPress={handleCableTv}
           className="bg-appblue rounded-xl py-4 mt-auto"
           activeOpacity={0.8}
         >

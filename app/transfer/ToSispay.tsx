@@ -42,9 +42,7 @@ const ToSispay = (props: Props) => {
   const handleAmount = (text: string) => {
     const formattedText = parseInt(text).toLocaleString();
     const numbertext = parseInt(text);
-    if (numbertext) {
-      setAmount(text);
-    }
+    setAmount(text);
   };
 
   const fetchAcountdetails = async (account: string) => {
@@ -117,9 +115,10 @@ const ToSispay = (props: Props) => {
         >
           <Text className="font-[500]">Recipient Account</Text>
           <TextInput
-            editable={!disabled}
+            // editable={!disabled}
             style={[disabled && { borderColor: "#22c55e", borderWidth: 1 }]}
             maxLength={10}
+            keyboardType="numeric"
             value={accountNumber}
             onChangeText={(text) => handleAccountNumber(text)}
             placeholder="SisPay Account No."

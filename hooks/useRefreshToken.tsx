@@ -4,17 +4,15 @@ import { Keys } from "@/constants/Keys";
 import axios, { isAxiosError } from "axios";
 import { useSelector } from "react-redux";
 import { RootState } from "@/config/store";
-import { axiosPrivate } from "@/utils/axiosPrivate";
-import { axiosInstance } from "@/config/axios";
 
 const useRefreshtoken = () => {
   const { currentuser } = useSelector((state: RootState) => state.user);
 
   const refreshToken = currentuser?.refreshToken;
 
-  const refresh = async () => {
+  const refresh = async (accessToken: string | null) => {
     try {
-      const { accessToken, refreshToken } = await getFromStore("sispayuser");
+      const { refreshToken } = await getFromStore("sispayuser");
       const response = await axios.post(`${authEndpoints.refreshtoken}`, {
         accessToken: accessToken,
         refreshToken: refreshToken,

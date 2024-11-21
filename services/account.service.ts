@@ -6,9 +6,9 @@ export enum VerificationType {
   NIN,
 }
 class AccountService {
-  async getUserAccount(axiosPrivate: AxiosInstance) {
+  async getUserAccount(api: AxiosInstance) {
     try {
-      const res = await axiosPrivate.get("/Account/GetUserAccount");
+      const res = await api.get("/Account/GetUserAccount");
       return res.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {

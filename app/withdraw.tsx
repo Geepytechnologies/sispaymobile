@@ -16,10 +16,10 @@ const withdraw = (props: Props) => {
       <View style={[globalstyles.centerview, { flex: 1 }]}>
         <View style={[{ gap: 10, justifyContent: "center" }]}>
           <Text className="text-[25px] font-[700] font-popp leading-[40px] text-center self-center text-[#121212] max-w-[200px]">
-            Please Insert Card
+            Please Insert Card Into Device
           </Text>
           <CardReader />
-          <PrimaryButton text="Continue" />
+          <PrimaryButton text="Continue" loading={false} />
         </View>
       </View>
     </SafeAreaView>

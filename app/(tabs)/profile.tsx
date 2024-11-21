@@ -27,12 +27,15 @@ import {
 } from "@expo/vector-icons";
 import { Colors } from "@/constants/Colors";
 import { SET_TOKENS } from "@/config/slices/authSlice";
+import { useAuth } from "@/utils/AuthProvider";
 
 export default function TabTwoScreen() {
   const { currentuser } = useSelector((state: RootState) => state.user);
+  const { setAccessToken } = useAuth();
   const dispatch = useDispatch();
   const handleLogout = async () => {
     await authService.Logout();
+    setAccessToken("");
     // router.re("/(auth)/Login");
     dispatch(SET_TOKENS({ accessToken: "", refreshToken: "" }));
   };

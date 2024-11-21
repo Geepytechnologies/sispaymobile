@@ -1,4 +1,4 @@
-import { router, useSegments } from "expo-router";
+import { router, SplashScreen, useSegments } from "expo-router";
 import React, {
   createContext,
   PropsWithChildren,
@@ -7,6 +7,7 @@ import React, {
   useState,
 } from "react";
 import { getFromStore } from "./localstorage";
+import authService from "@/services/auth.service";
 
 type AuthContextType = {
   accessToken: string | null;
@@ -35,12 +36,17 @@ const AuthContextProvider = ({ children }: PropsWithChildren) => {
     checkIfUserIsOnboarded();
     if (!isAuthGroup && !accessToken) {
       if (!useronboarded && !isOnboardingGroup && useronboarded !== undefined) {
+        SplashScreen.hideAsync();
         router.replace("/(onboarding)");
         return;
       }
+      SplashScreen.hideAsync();
+
       router.replace("/(auth)/Login");
     }
     if (isAuthGroup && accessToken) {
+      SplashScreen.hideAsync();
+
       router.replace("/(tabs)");
     }
   }, [segments, accessToken]);

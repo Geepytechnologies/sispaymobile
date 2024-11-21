@@ -32,6 +32,21 @@ class WalletService {
     }
   }
 
+  async getLastTwoTransactions(accountNumber: string | null) {
+    console.log("accountNumber: ", accountNumber);
+    try {
+      const response = await axios.get(
+        `${
+          CONSTANTS.APIURL
+        }/Transaction/GetAllTransactions?accountNumber=${accountNumber}&pageNumber=1&pageSize=${2}`
+      );
+      return response.data.result;
+    } catch (error) {
+      console.error("Error fetching transaction:", error);
+      throw error;
+    }
+  }
+
   async SisPayNameEnquiry(accountNo: string) {
     try {
       const response = await axios.post(

@@ -22,6 +22,7 @@ import { RegisterDTO } from "@/types/RegisterDTO";
 import authService from "@/services/auth.service";
 import Toast from "react-native-toast-message";
 import axios from "axios";
+import { formatPhoneNumber } from "@/utils/formatters";
 
 type Props = {};
 
@@ -56,11 +57,12 @@ const Register = (props: Props) => {
       firstname: data.firstname,
       lastname: data.lastname,
       middlename: "",
-      phoneNumber: data.phone,
+      phoneNumber: formatPhoneNumber(data.phone),
       email: data.email,
       password: data.password,
       businessName: data.businessname,
     };
+    setLoading(true);
     try {
       const res = await authService.Register(formdetails);
       if (res.statusCode == 200) {
@@ -69,11 +71,25 @@ const Register = (props: Props) => {
           text1: "Success",
           text2: "Registration Successful",
         });
-        router.push("/(auth)/Login");
+        const OtpRes = await authService.SendOtp({
+          name: data.firstname,
+          mobileNumber: formatPhoneNumber(data.phone),
+        });
+        if (OtpRes.message == "OTP sent successfully.") {
+          router.push({
+            pathname: "/(auth)/Otp",
+            params: {
+              phone: OtpRes.result.to,
+              pinId: OtpRes.result.pinId,
+              to: OtpRes.result.to,
+            },
+          });
+        }
       }
       console.log(res);
     } catch (error) {
       if (axios.isAxiosError(error)) {
+        console.log(error.response);
         if (error.response?.status == 409) {
           Toast.show({
             type: "error",
@@ -89,6 +105,8 @@ const Register = (props: Props) => {
           });
         }
       }
+    } finally {
+      setLoading(false);
     }
   };
   return (
@@ -97,6 +115,9 @@ const Register = (props: Props) => {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
     >
+      <View style={{ zIndex: 100 }}>
+        <Toast />
+      </View>
       <ScrollView
         className="pb-6"
         showsVerticalScrollIndicator={false}
@@ -358,7 +379,7 @@ const Register = (props: Props) => {
                       placeholder="112233"
                       placeholderTextColor={"#A1A1A1"}
                       keyboardType="numeric"
-                      secureTextEntry={!passwordvisible}
+                      secureTextEntry={!passwordvisible2}
                     />
                   )}
                 />
@@ -366,7 +387,7 @@ const Register = (props: Props) => {
                 <Feather
                   suppressHighlighting
                   onPress={() => togglePassword(2)}
-                  name={passwordvisible ? "eye" : "eye-off"}
+                  name={passwordvisible2 ? "eye" : "eye-off"}
                   size={17}
                   color="black"
                 />
@@ -387,7 +408,7 @@ const Register = (props: Props) => {
               className="mt-[28px] mb-[22px] w-full"
               activeOpacity={0.8}
             >
-              <PrimaryButton text="Next" />
+              <PrimaryButton text="Next" loading={loading} />
             </TouchableOpacity>
             <Text className="text-[#A1A1A1]font-inter text-[13px] font-[500] text-center">
               Already have an account?

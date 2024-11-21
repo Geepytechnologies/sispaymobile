@@ -1,6 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: ["./app/**/*.{js,jsx,ts,tsx}", "./components/**/*.{js,jsx,ts,tsx}"],
+  presets: [require("nativewind/preset")],
   theme: {
     extend: {
       colors: {
@@ -8,13 +9,7 @@ module.exports = {
         appblue: "#031D42",
       },
     },
-    fontFamily: {
-      mont: ["Montserrat", "sans-serif"],
-      rob: ["Roboto", "sans-serif"],
-      popp: ["Poppins", "sans-serif"],
-      space: ["SpaceMono", "sans-serif"],
-      inter: ["Inter", "sans-serif"],
-    },
+    fontFamily: {},
   },
   plugins: [],
 };

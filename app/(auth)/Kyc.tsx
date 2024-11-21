@@ -16,6 +16,7 @@ import { Keyboard } from "react-native";
 import accountService, { VerificationType } from "@/services/account.service";
 import { globalstyles } from "@/styles/common";
 import { router } from "expo-router";
+import { LoadingIndicator } from "@/components/common/LoadingIndicator";
 
 type Props = {};
 
@@ -149,7 +150,7 @@ const Kyc = (props: Props) => {
           onPress={InitiateVerification}
           className="mt-4"
         >
-          <PrimaryButton text={loading ? "Processing..." : "Submit"} />
+          <PrimaryButton loading={loading} text={"Submit"} />
         </TouchableOpacity>
       </SafeAreaView>
     </TouchableWithoutFeedback>

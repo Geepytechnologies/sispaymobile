@@ -114,7 +114,7 @@ class BillPaymentService {
 
       return response.data;
     } catch (error) {
-      console.error("Error purchasing airtime:", error);
+      // console.error("Error purchasing airtime:", error);
       throw error;
     }
   }

@@ -65,21 +65,16 @@ class AuthService {
     }
   }
   async Register(userDetails: RegisterDTO) {
-    try {
-      const response = await axios.post(`${authEndpoints.register}`, {
-        firstname: userDetails.firstname,
-        lastname: userDetails.lastname,
-        middlename: userDetails.middlename,
-        phoneNumber: userDetails.phoneNumber,
-        email: userDetails.email,
-        password: userDetails.password,
-        businessName: userDetails.businessName,
-      });
-      return response.data;
-    } catch (error) {
-      console.error("Sign up error:", error);
-      throw error;
-    }
+    const response = await axios.post(`${authEndpoints.register}`, {
+      firstname: userDetails.firstname,
+      lastname: userDetails.lastname,
+      middlename: userDetails.middlename,
+      phoneNumber: userDetails.phoneNumber,
+      email: userDetails.email,
+      password: userDetails.password,
+      businessName: userDetails.businessName,
+    });
+    return response.data;
   }
   async Logout() {
     await deleteFromStore("sispayuser");

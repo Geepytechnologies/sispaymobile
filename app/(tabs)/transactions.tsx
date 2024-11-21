@@ -10,6 +10,7 @@ import { globalstyles } from "@/styles/common";
 import { FontAwesome } from "@expo/vector-icons";
 import { Colors } from "@/constants/Colors";
 import SingleTransactionWidget from "@/components/common/SingleTransactionWidget";
+import { useFocusEffect } from "expo-router";
 
 type Props = {};
 
@@ -29,6 +30,9 @@ const transactions = (props: Props) => {
     queryFn: () =>
       walletService.getTransactions(startDate, endDate, accountNumber, 1, 10),
   });
+  useFocusEffect(() => {
+    refetch();
+  });
   console.log(userTransactions);
   return (
     <SafeAreaView style={{ flex: 1, padding: 16 }}>
@@ -47,9 +51,18 @@ const transactions = (props: Props) => {
       </View>
       <View className="my-5">
         {!isLoading &&
-          userTransactions.result.map((t: any, index: any) => (
-            <SingleTransactionWidget key={index} transaction={t} />
-          ))}
+          userTransactions.result
+            ?.sort(
+              (
+                a: { transactionDate: string | number | Date },
+                b: { transactionDate: string | number | Date }
+              ) =>
+                new Date(b.transactionDate).getTime() -
+                new Date(a.transactionDate).getTime()
+            )
+            .map((t: any, index: any) => (
+              <SingleTransactionWidget key={index} transaction={t} />
+            ))}
       </View>
     </SafeAreaView>
   );

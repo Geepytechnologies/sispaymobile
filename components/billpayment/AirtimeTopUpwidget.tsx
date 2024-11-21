@@ -9,6 +9,7 @@ import {
 import React from "react";
 import { Colors } from "@/constants/Colors";
 import { globalstyles } from "@/styles/common";
+import { LoadingIndicator } from "../common/LoadingIndicator";
 
 type Props = {
   setAmount: React.Dispatch<React.SetStateAction<string>>;
@@ -59,9 +60,13 @@ const AirtimeTopUpwidget = ({
         ))}
       </View>
       <View style={[globalstyles.rowview, { justifyContent: "space-between" }]}>
-        <View style={[globalstyles.rowview]} className="gap-2 underline ">
-          <Text>₦</Text>
+        <View
+          style={[globalstyles.rowview]}
+          className="gap-2 underline text-primary "
+        >
+          <Text className="text-primary">₦</Text>
           <TextInput
+            style={{ color: "#14A673" }}
             value={amount}
             className=""
             placeholder="50 - 500,000"
@@ -71,12 +76,15 @@ const AirtimeTopUpwidget = ({
         </View>
         <TouchableOpacity
           onPress={purchaseAirtime}
-          className="px-4 py-2 rounded-[15px]"
-          style={{ backgroundColor: loading ? "gray" : Colors.primary }}
+          className="py-4 min-w-[80px] items-center justify-center rounded-[10px]"
+          style={{ backgroundColor: Colors.primary }}
           activeOpacity={0.8}
-          disabled={loading}
         >
-          <Text className="text-white">Pay</Text>
+          {!loading ? (
+            <Text className="text-white">Pay</Text>
+          ) : (
+            <LoadingIndicator size={15} />
+          )}
         </TouchableOpacity>
       </View>
     </View>

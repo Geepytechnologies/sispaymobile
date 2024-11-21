@@ -1,8 +1,10 @@
 import {
+  Keyboard,
   Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
 } from "react-native";
 import React, { useRef, useState } from "react";
@@ -36,6 +38,7 @@ const Otp = (props: Props) => {
   const otp = useRef<OTPTextView>(null);
   const { phone, pinId, to } = useLocalSearchParams();
   const deviceinfo = useDeviceInfo();
+  const [loading, setLoading] = useState(false);
 
   const [otpInput, setOtpInput] = useState<string>("");
   const { padZero, minutes, seconds, setIsRunning, isRunning } =
@@ -63,6 +66,7 @@ const Otp = (props: Props) => {
       //@ts-ignore
       pinId: pinId,
     };
+    setLoading(true);
     try {
       const res = await authService.VerifyOtp(data);
       if (res.result.verified == "True") {
@@ -71,6 +75,7 @@ const Otp = (props: Props) => {
           text1: "Success",
           text2: "Verification Successful",
         });
+        router.push("/(auth)/Kyc");
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -83,56 +88,61 @@ const Otp = (props: Props) => {
         }
       }
     } finally {
+      setLoading(false);
     }
   };
   return (
     <>
-      <SafeAreaView style={[globalstyles.centerview, { flex: 1, padding: 16 }]}>
-        <Toast />
-        <DarkLogo width={200} />
-        <Text className="font-inter font-[700] text-[#000C20] text-[22px]">
-          Let&apos;s Complete Your Verification
-        </Text>
-        <Text className="text-[#A1A1A1] font-[500] text-[13px] mt-[8px]">
-          We&apos;ve sent a code to *******{last4Digits}
-        </Text>
-        <OTPTextInput
-          containerStyle={{ marginTop: 30 }}
-          textInputStyle={styles.roundedTextInput}
-          inputCount={6}
-          tintColor={Colors.offset}
-          offTintColor={"#00000080"}
-          handleTextChange={setOtpInput}
-          handleCellTextChange={handleCellTextChange}
-          ref={otp}
-        />
-        <Text className="text-[#A1A1A1]font-inter text-[13px] font-[500] text-center mt-5">
-          Didn&apos;t get any code?
-          <Text
-            disabled={isRunning}
-            onPress={() => {}}
-            className="text-appblue"
-          >
-            &nbsp;Resend code
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <SafeAreaView
+          style={[globalstyles.centerview, { flex: 1, padding: 16 }]}
+        >
+          <Toast />
+          <DarkLogo width={200} />
+          <Text className="font-inter font-[700] text-[#000C20] text-[22px]">
+            Let&apos;s Complete Your Verification
           </Text>
-          <Text>&nbsp;In&nbsp;</Text>
-          <Text>
-            {padZero(minutes)}:{padZero(seconds)}
+          <Text className="text-[#A1A1A1] font-[500] text-[13px] mt-[8px]">
+            We&apos;ve sent a code to *******{last4Digits}
           </Text>
-        </Text>
-        <View className="w-full mt-6" style={[{ gap: 10 }]}>
-          <TouchableOpacity
-            onPress={handleSubmit}
-            className="w-full"
-            activeOpacity={0.8}
-          >
-            <PrimaryButton text={"Verify"} />
-          </TouchableOpacity>
-          <TouchableOpacity className="w-full" activeOpacity={0.8}>
-            <SecondaryButton text={"Cancel"} />
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
+          <OTPTextInput
+            containerStyle={{ marginTop: 30 }}
+            textInputStyle={styles.roundedTextInput}
+            inputCount={6}
+            tintColor={Colors.offset}
+            offTintColor={"#00000080"}
+            handleTextChange={setOtpInput}
+            handleCellTextChange={handleCellTextChange}
+            ref={otp}
+          />
+          <Text className="text-[#A1A1A1]font-inter text-[13px] font-[500] text-center mt-5">
+            Didn&apos;t get any code?
+            <Text
+              disabled={isRunning}
+              onPress={() => {}}
+              className="text-appblue"
+            >
+              &nbsp;Resend code
+            </Text>
+            <Text>&nbsp;In&nbsp;</Text>
+            <Text>
+              {padZero(minutes)}:{padZero(seconds)}
+            </Text>
+          </Text>
+          <View className="w-full mt-6" style={[{ gap: 10 }]}>
+            <TouchableOpacity
+              onPress={handleSubmit}
+              className="w-full"
+              activeOpacity={0.8}
+            >
+              <PrimaryButton text={"Verify"} loading={loading} />
+            </TouchableOpacity>
+            <TouchableOpacity className="w-full" activeOpacity={0.8}>
+              <SecondaryButton text={"Cancel"} />
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </TouchableWithoutFeedback>
     </>
   );
 };

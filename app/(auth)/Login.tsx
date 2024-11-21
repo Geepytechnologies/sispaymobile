@@ -33,6 +33,7 @@ import { useAuth } from "@/utils/AuthProvider";
 import accountService from "@/services/account.service";
 import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 import { SET_ACCOUNT } from "@/config/slices/accountSlice";
+import { LoadingIndicator } from "@/components/common/LoadingIndicator";
 
 type Props = {};
 
@@ -43,7 +44,7 @@ const Login = (props: Props) => {
   const deviceinfo = useDeviceInfo();
   const { expoPushToken } = usePushNotifications();
   const dispatch = useDispatch();
-  const axiosInstance = useAxiosPrivate();
+  const axiosPrivate = useAxiosPrivate();
 
   const [formData, setFormData] = useState({ phone: "", password: "" });
 
@@ -83,14 +84,14 @@ const Login = (props: Props) => {
 
       dispatch(SIGNIN(res.result));
       setAccessToken(res.result.accessToken);
-      const userAccount = await accountService.getUserAccount(axiosInstance);
-      dispatch(SET_ACCOUNT(userAccount.result));
       dispatch(
         SET_TOKENS({
           accessToken: res.result.accessToken,
           refreshToken: res.result.refreshToken,
         })
       );
+      //const userAccount = await accountService.getUserAccount(axiosPrivate);
+      // dispatch(SET_ACCOUNT(userAccount.result));
 
       // router.push("/(tabs)");
 
@@ -101,6 +102,13 @@ const Login = (props: Props) => {
       });
     } catch (error) {
       if (axios.isAxiosError(error)) {
+        if (error.response?.status == 400) {
+          Toast.show({
+            type: "error",
+            text1: "Login Failure",
+            text2: error.response?.data.message,
+          });
+        }
         if (error.response?.status == 401) {
           Toast.show({
             type: "info",
@@ -282,7 +290,7 @@ const Login = (props: Props) => {
                 className="mt-[28px] mb-[22px] w-full"
                 activeOpacity={0.8}
               >
-                <PrimaryButton text={loading ? "Processing..." : "Continue"} />
+                <PrimaryButton loading={loading} text={"Continue"} />
               </TouchableOpacity>
               <Text className="text-[#A1A1A1]font-inter text-[13px] font-[500] text-center">
                 Don&apos;t have an account?

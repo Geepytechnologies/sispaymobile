@@ -1,3 +1,4 @@
+import React from "react";
 import {
   Image,
   StyleSheet,
@@ -33,18 +34,22 @@ import useDeviceInfo from "@/hooks/useDeviceInfo";
 import { useQuery } from "@tanstack/react-query";
 import walletService from "@/services/wallet.service";
 import SingleTransactionWidget from "@/components/common/SingleTransactionWidget";
+import { AxiosInstance } from "axios";
+import ProfileHeader from "@/components/common/ProfileHeader";
 
 export default function HomeScreen() {
   const [balanceVisible, setBalancevisible] = useState(false);
   const toggleBalance = () => {
     setBalancevisible(!balanceVisible);
   };
+
+  // const [accountNumber, setAccountNumber] = useState("");
+
   const dispatch = useDispatch();
   const { currentuser } = useSelector((state: RootState) => state.user);
   const { userAccount } = useSelector((state: RootState) => state.account);
-  const firstname = currentuser && currentuser.firstName;
-  const lastname = currentuser && currentuser.lastName;
-  const axiosPrivate = useAxiosPrivate();
+
+  const Api = useAxiosPrivate();
   const deviceinfo = useDeviceInfo();
 
   console.log({
@@ -53,60 +58,40 @@ export default function HomeScreen() {
     model: deviceinfo.model,
   });
 
-  const getUserAccount = async () => {
-    const res = await accountService.getUserAccount(axiosPrivate);
-    dispatch(SET_ACCOUNT(res.result));
-  };
-  const accountNumber =
-    (userAccount && userAccount.accountNumber) || "8022507499";
-  const startDate = "";
-  const endDate = "";
+  const accountNumber = userAccount && userAccount.accountNumber;
+
+  const {
+    isLoading: accountLoading,
+    data: userAccountData,
+    error: userAccountError,
+    refetch: userAccountRefetch,
+  } = useQuery({
+    queryKey: ["getUserAccount"],
+    queryFn: () => accountService.getUserAccount(Api),
+  });
+
   const {
     isLoading,
     data: userTransactions,
     error,
     refetch,
   } = useQuery({
-    queryKey: ["transactions"],
-    queryFn: () =>
-      walletService.getTransactions(startDate, endDate, accountNumber, 1, 2),
+    queryKey: ["lastTwotransactions"],
+    queryFn: () => walletService.getLastTwoTransactions(accountNumber),
+    enabled: !!userAccountData?.result,
   });
-  // console.log(userTransactions.result);
-  useFocusEffect(
-    useCallback(() => {
-      getUserAccount();
-      // Add cleanup logic here
-      // return () => {};
-    }, [])
-  );
-
+  // console.log(userTransactions?.result);
   useEffect(() => {
-    getUserAccount();
-  }, []);
+    if (userAccountData) {
+      dispatch(SET_ACCOUNT(userAccountData?.result));
+    }
+  }, [userAccountData, dispatch]);
+
   return (
     <SafeAreaView className="p-[14px]">
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* header */}
-        <View
-          className="px-[10px] py-[14px]"
-          style={[globalstyles.rowview, { justifyContent: "space-between" }]}
-        >
-          <View className="flex flex-row gap-[12px] ">
-            <Avatar />
-            <View style={[globalstyles.colview]}>
-              <Text className="text-[#000C20] font-[500] text-[13px]">
-                Hello
-              </Text>
-              <Text className="text-[#000C20] font-[700] text-[13px]">
-                {firstname} {lastname}
-              </Text>
-            </View>
-          </View>
-          <View style={[globalstyles.rowview, { gap: 10 }]}>
-            <FontAwesome name="qrcode" size={24} color="black" />
-            <EvilIcons name="bell" size={24} color="black" />
-          </View>
-        </View>
+        <ProfileHeader />
         {/* widget */}
         <View className="flex flex-row items-center mt-5 justify-between px-5 bg-appblue rounded-[20px] min-h-[120px]">
           <View className="flex flex-col gap-9">
@@ -131,7 +116,9 @@ export default function HomeScreen() {
             <View style={[{ gap: 5 }]} className="flex flex-row items-center">
               <Text className="text-white items-center">₦</Text>
               <Text className="text-[20px] font-[700] text-white">
-                {balanceVisible ? userAccount?.balance : "*****"}
+                {balanceVisible
+                  ? userAccountData?.result.balance + ".00"
+                  : "*****"}
               </Text>
             </View>
           </View>
@@ -152,20 +139,21 @@ export default function HomeScreen() {
           </View>
         </View>
         {/* latest transactions */}
-        {!isLoading && (
+        {userTransactions && (
           <View className="bg-white px-3 pt-6 my-5 shadow-md rounded-xl">
-            {userTransactions.result
-              .sort(
-                (
-                  a: { transactionDate: string },
-                  b: { transactionDate: string }
-                ) =>
-                  Date.parse(b.transactionDate) - Date.parse(a.transactionDate)
-              )
-              .slice(0, 2)
-              .map((t: any, index: Key | null | undefined) => (
-                <SingleTransactionWidget key={index} transaction={t} />
-              ))}
+            {userTransactions &&
+              userTransactions
+                ?.sort(
+                  (
+                    a: { transactionDate: string | number | Date },
+                    b: { transactionDate: string | number | Date }
+                  ) =>
+                    new Date(b.transactionDate).getTime() -
+                    new Date(a.transactionDate).getTime()
+                )
+                .map((t: any, index: Key | null | undefined) => (
+                  <SingleTransactionWidget key={index} transaction={t} />
+                ))}
           </View>
         )}
         <View
