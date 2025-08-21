@@ -8,8 +8,11 @@ import { router } from "expo-router";
 type Props = {};
 
 const screen2 = (props: Props) => {
+  const handleSkip = () => {
+    requestAnimationFrame(() => router.replace("/(auth)/Register"));
+  };
   return (
-    <SafeAreaView className="p-6 bg-white" style={{ flex: 1 }}>
+    <SafeAreaView className="p-[35px] bg-white" style={{ flex: 1 }}>
       {/* logo */}
       <View className="w-full flex items-center justify-center">
         <Image
@@ -19,30 +22,37 @@ const screen2 = (props: Props) => {
         />
       </View>
       {/* content */}
-      <View className="flex flex-col items-center">
+      <View className="flex flex-col items-center mt-3 flex-1">
         {/* <Cards /> */}
-        <View className="w-full flex items-center justify-center">
+        <View className="w-full flex items-center justify-center h-[300px]">
           <Image
             source={require("@/assets/images/cardreader.png")}
             style={styles.image}
-            resizeMode="contain"
+            resizeMode="cover"
           />
         </View>
-        <Text className="font-popp text-[36px] font-[400] mt-[18px] text-appblue">
-          <Text className="font-light">For Seamless{"\n"}</Text>
-          <Text>online{"\n"}</Text>
-          <Text className="font-[700]">Transaction</Text>
-        </Text>
+        <View className="flex items-center mt-[28px] mb-[51px]">
+          <Text className="font-popp text-[36px] font-[400] text-center w-[291px] text-appblue">
+            <Text className="font-light">For Seamless{"\n"}</Text>
+            <Text>online{"\n"}</Text>
+            <Text className="font-[700]">Transaction.</Text>
+          </Text>
+        </View>
         <Slider2 className="mt-[50px]" />
-        <Text className="text-[12px] font-[600] text-appblue tracking-[0.18px] mt-[30px]">
+        <Text
+          onPress={handleSkip}
+          className="text-[12px] font-[600] text-appblue tracking-[0.18px] mt-[30px]"
+        >
           Skip {">>>"}
         </Text>
         <TouchableOpacity
-          onPress={() => router.replace("/(onboarding)/screen3")}
-          className="mt-[28px] w-full"
+          onPress={() =>
+            requestAnimationFrame(() => router.replace("/(onboarding)/screen3"))
+          }
+          className="mt-auto w-full"
           activeOpacity={0.8}
         >
-          <PrimaryButton text="Continue" />
+          <PrimaryButton text="Continue" loading={false} />
         </TouchableOpacity>
       </View>
     </SafeAreaView>

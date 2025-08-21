@@ -1,4 +1,9 @@
-import { router, SplashScreen, useSegments } from "expo-router";
+import {
+  router,
+  SplashScreen,
+  useRootNavigationState,
+  useSegments,
+} from "expo-router";
 import React, {
   createContext,
   PropsWithChildren,
@@ -20,6 +25,7 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 const AuthContextProvider = ({ children }: PropsWithChildren) => {
+  const rootNavigationState = useRootNavigationState();
   const [accessToken, setAccessToken] = useState<string | null>("");
   const [useronboarded, setUserOnboarded] = useState<boolean>();
   console.log("isUserOnboarded:", useronboarded);
@@ -33,6 +39,7 @@ const AuthContextProvider = ({ children }: PropsWithChildren) => {
   };
 
   useEffect(() => {
+    if (!rootNavigationState?.key) return; // wait for root navigator to be ready
     checkIfUserIsOnboarded();
     if (!isAuthGroup && !accessToken) {
       if (!useronboarded && !isOnboardingGroup && useronboarded !== undefined) {
@@ -49,7 +56,7 @@ const AuthContextProvider = ({ children }: PropsWithChildren) => {
 
       router.replace("/(tabs)");
     }
-  }, [segments, accessToken]);
+  }, [segments, accessToken, rootNavigationState?.key]);
   return (
     <AuthContext.Provider value={{ accessToken, setAccessToken }}>
       {children}

@@ -1,35 +1,55 @@
 import { useEffect } from "react";
 import useRefreshtoken from "./useRefreshToken";
 import axios from "axios";
-import { addToStore, getFromStore } from "@/utils/localstorage";
-import { Keys } from "@/constants/Keys";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "@/config/store";
+import { addToStore } from "@/utils/localstorage";
+import { useUserStore } from "@/config/store";
 import { axiosInstance } from "@/config/axios";
 import authService from "@/services/auth.service";
 import { useSegments } from "expo-router";
-import { SET_TOKENS } from "@/config/slices/authSlice";
+import Auth from "@/utils/auth";
+import { jwtDecode } from "jwt-decode";
 
 const useAxiosPrivate = () => {
+  const { user, clearUser } = useUserStore((state) => state);
+
   const refresh = useRefreshtoken();
-  const { currentuser } = useSelector((state: RootState) => state.user);
-  const accessToken = currentuser && currentuser.accessToken;
+
   const segments = useSegments();
   const currentScreen = segments[segments.length - 1];
-  const dispatch = useDispatch();
 
   const handleLogout = async () => {
     await authService.Logout();
     await addToStore("currentScreen", currentScreen);
-    dispatch(SET_TOKENS({ accessToken: "", refreshToken: "" }));
+    clearUser();
   };
   useEffect(() => {
     const requestIntercept = axiosInstance.interceptors.request.use(
       async (config) => {
-        console.log("access from request", accessToken);
+        // Attach current access token
         if (!config.headers["Authorization"]) {
-          config.headers["Authorization"] = `Bearer ${accessToken}`;
+          config.headers["Authorization"] = `Bearer ${user?.accessToken}`;
         }
+        // Proactive refresh if token is near expiry (<60s)
+        try {
+          const token = user?.accessToken;
+          if (token) {
+            const decoded: any = jwtDecode(token);
+            if (decoded?.exp) {
+              const now = Date.now() / 1000;
+              if (decoded.exp - now < 60) {
+                const refreshed = await refresh(user?.accessToken);
+                if (refreshed?.accessToken) {
+                  await Auth.setToken(refreshed.accessToken);
+                  if (refreshed.refreshToken)
+                    await Auth.setRefreshToken(refreshed.refreshToken);
+                  config.headers[
+                    "Authorization"
+                  ] = `Bearer ${refreshed.accessToken}`;
+                }
+              }
+            }
+          }
+        } catch {}
         return config;
       },
       (error) => {
@@ -54,9 +74,15 @@ const useAxiosPrivate = () => {
         ) {
           prevRequest.sent = true;
           try {
-            const newAccessToken = await refresh(accessToken);
-            // console.log("newaccesstoken", newAccessToken);
-            prevRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
+            const refreshed = await refresh(user?.accessToken);
+            if (refreshed?.accessToken) {
+              await Auth.setToken(refreshed.accessToken);
+              if (refreshed.refreshToken)
+                await Auth.setRefreshToken(refreshed.refreshToken);
+              prevRequest.headers[
+                "Authorization"
+              ] = `Bearer ${refreshed.accessToken}`;
+            }
             return axios(prevRequest);
           } catch (refreshError) {
             handleLogout();
@@ -72,7 +98,7 @@ const useAxiosPrivate = () => {
       axiosInstance.interceptors.response.eject(responseIntercept);
       axiosInstance.interceptors.request.eject(requestIntercept);
     };
-  }, [accessToken, refresh]);
+  }, [user?.accessToken, refresh]);
 
   return axiosInstance;
 };

@@ -1,25 +1,28 @@
 import { CONSTANTS } from "@/constants";
+import { IAccountResponse } from "@/interfaces/responses/account.interface";
 import { VerifyAndCreateAccountDTO } from "@/types/AccountDTO";
+import { getRequest } from "@/utils/apiCaller";
 import axios, { AxiosInstance } from "axios";
+import { axiosInstance } from "@/config/axios";
 export enum VerificationType {
   BVN,
   NIN,
 }
 class AccountService {
-  async getUserAccount(api: AxiosInstance) {
+  async getUserAccount() {
     try {
-      const res = await api.get("/Account/GetUserAccount");
-      return res.data;
+      const res = await getRequest<IAccountResponse>({
+        url: "/Account/GetUserAccount",
+      });
+      return res.result;
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        // Log detailed error information
         console.error("Get user account error::", {
-          statusCode: error.response?.status, // The status code
-          message: error.message, // The error message
-          data: error.response?.data, // The response data
+          statusCode: error.response?.status,
+          message: error.message,
+          data: error.response?.data,
         });
       }
-      //   console.error("Get user account error:", error);
       throw error;
     }
   }
@@ -58,6 +61,102 @@ class AccountService {
           statusCode: error.response?.status, // The status code
           message: error.message, // The error message
           data: error.response?.data, // The response data
+        });
+      }
+      //   console.error("Verify and create account error:", error);
+      throw error;
+    }
+  }
+
+  async CreatePin(api: AxiosInstance, accountPin: string) {
+    try {
+      const res = await api.post(
+        `${CONSTANTS.APIURL}/Account/CreatePin?AccountPin=${accountPin}`
+      );
+      return res.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error("Validate pin error::", {
+          statusCode: error.response?.status,
+          message: error.message,
+          data: error.response?.data,
+        });
+      }
+      //   console.error("Verify and create account error:", error);
+      throw error;
+    }
+  }
+  async ValidatePin(api: AxiosInstance, accountPin: string) {
+    try {
+      const res = await api.post(
+        `${CONSTANTS.APIURL}/api/Account/ValidatePin?AccountPin=${accountPin}`
+      );
+      return res.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error("Validate pin error::", {
+          statusCode: error.response?.status,
+          message: error.message,
+          data: error.response?.data,
+        });
+      }
+      //   console.error("Verify and create account error:", error);
+      throw error;
+    }
+  }
+  async ChangePin(api: AxiosInstance, oldPin: string, newPin: string) {
+    try {
+      const res = await api.post(
+        `${CONSTANTS.APIURL}/Account/ChangePin?oldAccountPin=${oldPin}&newAccountPin=${newPin}`
+      );
+      return res.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error("Change pin error::", {
+          statusCode: error.response?.status,
+          message: error.message,
+          data: error.response?.data,
+        });
+      }
+      //   console.error("Verify and create account error:", error);
+      throw error;
+    }
+  }
+  async sendOtpForForgotPin(api: AxiosInstance) {
+    try {
+      const res = await api.post(
+        `${CONSTANTS.APIURL}/Account/ForgotPin/sendOtp`
+      );
+      return res.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error("send otp error::", {
+          statusCode: error.response?.status,
+          message: error.message,
+          data: error.response?.data,
+        });
+      }
+      //   console.error("Verify and create account error:", error);
+      throw error;
+    }
+  }
+  async confirmOtpForForgotPin(
+    api: AxiosInstance,
+    pinId: string,
+    otp: string,
+    mobileNumber: string
+  ) {
+    try {
+      const res = await api.post(
+        `${CONSTANTS.APIURL}/Account/ForgotPin/confirmOtp?PinId=${pinId}&Otp=${otp}&MobileNumber=${mobileNumber}`
+      );
+      return res.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error("send otp error::", {
+          statusCode: error.response?.status,
+          message: error.message,
+          data: error.response?.data,
         });
       }
       //   console.error("Verify and create account error:", error);

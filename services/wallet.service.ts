@@ -38,7 +38,7 @@ class WalletService {
       const response = await axios.get(
         `${
           CONSTANTS.APIURL
-        }/Transaction/GetAllTransactions?accountNumber=${accountNumber}&pageNumber=1&pageSize=${2}`
+        }/Transaction/GetAllTransactions?accountNumber=${"8028434560"}&pageNumber=1&pageSize=${2}`
       );
       return response.data.result;
     } catch (error) {
@@ -51,7 +51,7 @@ class WalletService {
     try {
       const response = await axios.post(
         `${CONSTANTS.APIURL}/Wallet/transfer/name_enquiry`,
-        { bankCode: "999240", accountNumber: accountNo }
+        { bankCode: "090286", accountNumber: accountNo }
       );
       return response.data;
     } catch (error) {

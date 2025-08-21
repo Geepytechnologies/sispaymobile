@@ -12,7 +12,6 @@ import React, { useEffect, useRef, useState } from "react";
 import Toast from "react-native-toast-message";
 import DynamicHeader from "@/components/DynamicHeader";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useQuery } from "@tanstack/react-query";
 import billpaymentService from "@/services/billpayment.service";
 import { globalstyles } from "@/styles/common";
 import {
@@ -27,7 +26,7 @@ import { renderBackdrop } from "./buydata";
 import axios from "axios";
 import { PurchaseCableTvDTO } from "@/types/billpayment";
 import { Dropdown } from "react-native-element-dropdown";
-import { useBuyCableTv } from "@/queries/billpayment";
+import { useBuyCableTv, useCableTvCategories } from "@/queries/billpayment";
 
 type Props = {};
 interface ITvCategory {
@@ -63,15 +62,7 @@ const tv = (props: Props) => {
     },
   });
 
-  const {
-    isLoading,
-    data: tvCategories,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ["tvcategories"],
-    queryFn: billpaymentService.getCableTvServiceCategory,
-  });
+  const { isLoading, data: tvCategories, refetch } = useCableTvCategories();
   useEffect(() => {
     if (tvCategories && tvCategories.length > 0) {
       //   console.log(dataCategories);

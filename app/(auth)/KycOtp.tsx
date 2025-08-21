@@ -20,13 +20,12 @@ import axios from "axios";
 import Toast from "react-native-toast-message";
 import { SafeAreaView } from "react-native-safe-area-context";
 import accountService from "@/services/account.service";
-import { useSelector } from "react-redux";
 
 import { Colors } from "@/constants/Colors";
 import { globalstyles } from "@/styles/common";
 import DarkLogo from "@/components/common/DarkLogo";
 import { VerifyAndCreateAccountDTO } from "@/types/AccountDTO";
-import { RootState } from "@/config/store";
+import { useUserStore } from "@/config/store";
 import { LoadingIndicator } from "@/components/common/LoadingIndicator";
 
 type Props = {};
@@ -39,7 +38,7 @@ const KycOtp = (props: Props) => {
   const [otpInput, setOtpInput] = useState<string>("");
   const { padZero, minutes, seconds, setIsRunning, isRunning } =
     UseCountdownTimer();
-  const { currentuser } = useSelector((state: RootState) => state.user);
+  const { user } = useUserStore();
 
   const handleCellTextChange = async (text: string, i: number) => {
     if (i === 0) {
@@ -52,8 +51,8 @@ const KycOtp = (props: Props) => {
   const handleSubmit = async () => {
     const data: VerifyAndCreateAccountDTO = {
       IdentityType: identityType,
-      Phone: currentuser?.phoneNumber,
-      Email: currentuser?.email,
+      Phone: user?.phoneNumber,
+      Email: user?.email,
       IdentityNumber: identityNumber,
       IdentityId: IdentityId,
       Otp: otpInput,

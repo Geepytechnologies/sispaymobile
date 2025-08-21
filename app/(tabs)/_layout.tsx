@@ -1,4 +1,4 @@
-import { Tabs } from "expo-router";
+import { router, Tabs, useRootNavigationState } from "expo-router";
 import React, { useEffect } from "react";
 
 import { TabBarIcon } from "@/components/navigation/TabBarIcon";
@@ -7,9 +7,24 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 import Home from "@/assets/images/icons/home.svg";
 import Transactions from "@/assets/images/icons/transactions.svg";
 import Profile from "@/assets/images/icons/profile.svg";
+import Auth from "@/utils/auth";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const { isAuthenticated } = Auth;
+  const navState = useRootNavigationState();
+
+  useEffect(() => {
+    if (!navState?.key) return; // wait for root navigation to mount
+    const checkAuth = async () => {
+      const res = await isAuthenticated();
+      if (!res) {
+        router.replace("/(auth)/Login");
+      }
+    };
+
+    checkAuth();
+  }, [navState?.key]);
   return (
     <Tabs
       screenOptions={{

@@ -13,12 +13,12 @@ import DynamicHeader from "@/components/DynamicHeader";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 import billpaymentService from "@/services/billpayment.service";
-import { useQuery } from "@tanstack/react-query";
 import { globalstyles } from "@/styles/common";
 import { FontAwesome6, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors } from "@/constants/Colors";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { renderBackdrop } from "./buydata";
+import { useUtilityBillCategories } from "@/queries/billpayment";
 import { ScreenDimensions } from "@/constants/Dimensions";
 
 type Props = {};
@@ -36,15 +36,7 @@ const electricity = (props: Props) => {
   const utilityBillCategorySheetRef = React.useRef<BottomSheet>(null);
   const [meterNumber, setMeterNumber] = useState("");
   const [purchaseLoading, setPurchaseLoading] = useState(false);
-  const {
-    isLoading,
-    data: utilitybillCategories,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ["utilitybillcategories"],
-    queryFn: billpaymentService.getUtilityBillServiceCategory,
-  });
+  const { isLoading, data: utilitybillCategories } = useUtilityBillCategories();
   useEffect(() => {
     if (utilitybillCategories && utilitybillCategories.length > 0) {
       //   console.log(dataCategories);

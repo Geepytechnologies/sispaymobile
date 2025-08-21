@@ -19,6 +19,8 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: false,
   }),
 });
 
@@ -109,26 +111,21 @@ export function usePushNotifications() {
       }
     });
 
-    notificationListener.current =
-      Notifications.addNotificationReceivedListener((notification) => {
+    const notificationListener = Notifications.addNotificationReceivedListener(
+      (notification) => {
         console.log(notification);
         setNotification(notification);
-      });
+      }
+    );
 
-    responseListener.current =
+    const responseListener =
       Notifications.addNotificationResponseReceivedListener((response) => {
         console.log(response);
       });
 
     return () => {
-      if (notificationListener.current) {
-        Notifications.removeNotificationSubscription(
-          notificationListener.current
-        );
-      }
-      if (responseListener.current) {
-        Notifications.removeNotificationSubscription(responseListener.current);
-      }
+      notificationListener.remove();
+      responseListener.remove();
     };
   }, [projectId]);
 

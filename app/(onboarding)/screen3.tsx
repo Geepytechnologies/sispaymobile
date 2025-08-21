@@ -5,18 +5,20 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import React from "react";
+import React, { use } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import PrimaryButton from "@/components/common/PrimaryButton";
 import { addToStore } from "@/utils/localstorage";
 import { router } from "expo-router";
+import { useUserStore } from "@/config/store";
 
 type Props = {};
 
 const screen3 = (props: Props) => {
+  const { setUserOnboarded } = useUserStore();
   const handleCompleteOnboarding = async () => {
-    await addToStore("useronboarded", true);
-    router.push("/(auth)/Register");
+    setUserOnboarded(true);
+    requestAnimationFrame(() => router.push("/(auth)/Register"));
   };
   return (
     <View className="bg-black flex-1">
@@ -38,7 +40,7 @@ const screen3 = (props: Props) => {
               className="mt-[28px] w-full"
               activeOpacity={0.8}
             >
-              <PrimaryButton text="Continue" />
+              <PrimaryButton text="Continue" loading={false} />
             </TouchableOpacity>
           </View>
         </View>

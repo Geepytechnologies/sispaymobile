@@ -22,7 +22,7 @@ import {
 import { globalstyles } from "@/styles/common";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Backbutton from "@/components/buttons/Backbutton";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import billpaymentService from "@/services/billpayment.service";
 import DynamicHeader from "@/components/DynamicHeader";
 import useContacts from "@/hooks/useContacts";
@@ -34,8 +34,8 @@ import Modal from "react-native-modal";
 import { Backdrop } from "@/components/common/Backdrop";
 import { Colors } from "@/constants/Colors";
 import * as Contacts from "expo-contacts";
-import { useSelector } from "react-redux";
-import { RootState } from "@/config/store";
+import { useUserStore } from "@/config/store";
+import { useDataCategories } from "@/queries/billpayment";
 import { ScreenDimensions } from "@/constants/Dimensions";
 import AirtimeTopUpwidget from "@/components/billpayment/AirtimeTopUpwidget";
 import {
@@ -67,8 +67,7 @@ export const renderBackdrop = (props: any) => (
 );
 
 const buydata = (props: Props) => {
-  const { currentuser } = useSelector((state: RootState) => state.user);
-  const { userAccount } = useSelector((state: RootState) => state.account);
+  const { user, userAccount } = useUserStore();
   // const { contacts, getContacts } = useContacts();
   const snapPoints = ["40%"];
   const [isModalVisible, setModalVisible] = useState(false);
@@ -102,15 +101,7 @@ const buydata = (props: Props) => {
   const toggleModal = () => {
     setSuccessModal(!successModal);
   };
-  const {
-    isLoading,
-    data: dataCategories,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ["datacategories"],
-    queryFn: billpaymentService.getDataServiceCategory,
-  });
+  const { isLoading, data: dataCategories } = useDataCategories();
 
   useEffect(() => {
     if (dataCategories && dataCategories.length > 0) {

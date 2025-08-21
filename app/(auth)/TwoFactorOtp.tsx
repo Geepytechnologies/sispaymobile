@@ -24,10 +24,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import useDeviceInfo from "@/hooks/useDeviceInfo";
 import accountService from "@/services/account.service";
 import useAxiosPrivate from "@/hooks/useAxiosPrivate";
-import { useDispatch } from "react-redux";
-import { SIGNIN } from "@/config/slices/userSlice";
-import { SET_ACCOUNT } from "@/config/slices/accountSlice";
-import { SET_TOKENS } from "@/config/slices/authSlice";
+import { useUserStore } from "@/config/store";
 import { Colors } from "@/constants/Colors";
 import { globalstyles } from "@/styles/common";
 import DarkLogo from "@/components/common/DarkLogo";
@@ -50,7 +47,7 @@ const TwoFactorOtp = (props: Props) => {
 
   const last4Digits = phone.slice(-4);
 
-  const dispatch = useDispatch();
+  const { setUser, setUserAccount } = useUserStore();
 
   const handleCellTextChange = async (text: string, i: number) => {
     if (i === 0) {
@@ -77,16 +74,10 @@ const TwoFactorOtp = (props: Props) => {
     setIsLoading(true);
     try {
       const res = await authService.TwoFactorAuthLogin(data);
-      dispatch(SIGNIN(res.result));
+      setUser(res.result);
       setAccessToken(res.result.accessToken);
-      const userAccount = await accountService.getUserAccount(axiosInstance);
-      dispatch(SET_ACCOUNT(userAccount.result));
-      dispatch(
-        SET_TOKENS({
-          accessToken: res.result.accessToken,
-          refreshToken: res.result.refreshToken,
-        })
-      );
+      const userAccount = await accountService.getUserAccount();
+      setUserAccount(userAccount);
 
       // router.push("/(tabs)");
 

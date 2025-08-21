@@ -13,6 +13,7 @@ import { Colors } from "@/constants/Colors";
 import { globalstyles } from "@/styles/common";
 import { useQuery } from "@tanstack/react-query";
 import billpaymentService from "@/services/billpayment.service";
+import { useProductCategories, useVtuDataPlans } from "@/queries/billpayment";
 import { Fontisto } from "@expo/vector-icons";
 import BottomSheet, {
   BottomSheetBackdrop,
@@ -104,19 +105,8 @@ const DataTopUPWidget = ({
     }
   };
 
-  const { isLoading, data, error, refetch } = useQuery({
-    queryKey: ["productcategories"],
-    queryFn: () => billpaymentService.getProductCategories(category),
-  });
-  const {
-    isLoading: vtuDataLoading,
-    data: vtuDataPlans,
-    error: vtuErrorLoading,
-    refetch: vtuRefetch,
-  } = useQuery({
-    queryKey: ["vtudataplans"],
-    queryFn: () => billpaymentService.getVtuDataPlans(),
-  });
+  const { isLoading, data } = useProductCategories(category);
+  const { isLoading: vtuDataLoading, data: vtuDataPlans } = useVtuDataPlans();
 
   productCategories = data;
   if (!isLoading && productCategories) {

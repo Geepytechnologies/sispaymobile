@@ -22,17 +22,16 @@ import {
 } from "@expo/vector-icons";
 import { Colors } from "@/constants/Colors";
 import { TransferDTO } from "@/types/AccountDTO";
-import { useSelector } from "react-redux";
-import { RootState } from "@/config/store";
+import { useUserStore } from "@/config/store";
 import Toast from "react-native-toast-message";
 import axios from "axios";
 import { Dropdown } from "react-native-element-dropdown";
-import { useQuery } from "@tanstack/react-query";
+import { useBankLists } from "@/queries/wallet";
 
 type Props = {};
 
 const ToBankAccount = (props: Props) => {
-  const { userAccount } = useSelector((state: RootState) => state.account);
+  const { userAccount } = useUserStore();
   const [accountNumber, setAccountNumber] = useState("");
   const [amount, setAmount] = useState<string>();
   const [saveBeneficiary, setSaveBeneficiary] = useState(false);
@@ -116,15 +115,7 @@ const ToBankAccount = (props: Props) => {
     }
   };
 
-  const {
-    isLoading,
-    data: banklists,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ["banklists"],
-    queryFn: () => walletService.GetBankList(),
-  });
+  const { isLoading, data: banklists } = useBankLists();
   const data =
     !isLoading &&
     banklists.map((item: any) => ({

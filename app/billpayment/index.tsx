@@ -25,6 +25,9 @@ import Backbutton from "@/components/buttons/Backbutton";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import billpaymentService from "@/services/billpayment.service";
 import DynamicHeader from "@/components/DynamicHeader";
+import OTPTextView from "react-native-otp-textinput";
+import OTPTextInput from "react-native-otp-textinput";
+import * as Clipboard from "expo-clipboard";
 import useContacts from "@/hooks/useContacts";
 import BottomSheet, {
   BottomSheetBackdrop,
@@ -34,8 +37,8 @@ import Modal from "react-native-modal";
 import { Backdrop } from "@/components/common/Backdrop";
 import { Colors } from "@/constants/Colors";
 import * as Contacts from "expo-contacts";
-import { useSelector } from "react-redux";
-import { RootState } from "@/config/store";
+import { useUserStore } from "@/config/store";
+import { useAirtimeCategories } from "@/queries/billpayment";
 import { ScreenDimensions } from "@/constants/Dimensions";
 import AirtimeTopUpwidget from "@/components/billpayment/AirtimeTopUpwidget";
 import { PurchaseAirtimeDTO } from "@/types/billpayment";
@@ -45,13 +48,15 @@ import Toast from "react-native-toast-message";
 type Props = {};
 
 const Airtime = (props: Props) => {
-  const { currentuser } = useSelector((state: RootState) => state.user);
-  const { userAccount } = useSelector((state: RootState) => state.account);
+  const [otpInput, setOtpInput] = useState<string>("");
+  const otp = useRef<OTPTextView>(null);
+
+  const { user, userAccount } = useUserStore();
   // const { contacts, getContacts } = useContacts();
   const snapPoints = ["40%"];
   const [isModalVisible, setModalVisible] = useState(false);
   const [isContactsModalVisible, setIsContactsModalVisible] = useState(false);
-  const [selectedPhone, setSelectedPhone] = useState(currentuser?.phoneNumber);
+  const [selectedPhone, setSelectedPhone] = useState(user?.phoneNumber);
   const [successModal, setSuccessModal] = useState(false);
   const [amount, setAmount] = useState("");
   const [purchaseLoading, setPurchaseLoading] = useState(false);
@@ -64,15 +69,7 @@ const Airtime = (props: Props) => {
   const toggleModal = () => {
     setSuccessModal(!successModal);
   };
-  const {
-    isLoading,
-    data: airtimeCategories,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ["airtimecategories"],
-    queryFn: billpaymentService.getAirtimeServiceCategory,
-  });
+  const { isLoading, data: airtimeCategories } = useAirtimeCategories();
   const [airtimeCategory, setAirtimeCategory] =
     useState<AirtimeCategory | null>(null);
 
@@ -130,6 +127,14 @@ const Airtime = (props: Props) => {
   };
   const bottomsheetRef = useRef<BottomSheet>(null);
   const contactsRef = useRef<BottomSheet>(null);
+  const pinRef = useRef<BottomSheet>(null);
+
+  const closePinModal = () => {
+    pinRef.current?.close();
+  };
+  const openPinModal = () => {
+    pinRef.current?.expand();
+  };
 
   const showmodal = () => {
     bottomsheetRef.current?.expand();
@@ -152,6 +157,7 @@ const Airtime = (props: Props) => {
       opacity={0.7}
     />
   );
+
   const buyAirtime = async () => {
     if (selectedPhone == undefined || selectedPhone == null) {
       return;
@@ -205,9 +211,17 @@ const Airtime = (props: Props) => {
       setPurchaseLoading(false);
     }
   };
+  const handleCellTextChange = async (text: string, i: number) => {
+    if (i === 0) {
+      const clippedText = await Clipboard.getStringAsync();
+      if (clippedText.slice(0, 1) === text) {
+        otp.current?.setValue(clippedText, true);
+      }
+    }
+  };
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <>
+      <View style={{ flex: 1 }}>
         <View className="z-50">
           <Toast />
         </View>
@@ -256,8 +270,8 @@ const Airtime = (props: Props) => {
             />
           </View>
           <AirtimeTopUpwidget
-            loading={purchaseLoading}
-            purchaseAirtime={buyAirtime}
+            loading={false}
+            purchaseAirtime={() => openPinModal()}
             amount={amount}
             setAmount={setAmount}
           />
@@ -269,7 +283,10 @@ const Airtime = (props: Props) => {
             snapPoints={["45%"]}
           >
             <BottomSheetView style={{ paddingTop: 20 }}>
-              <View className="px-5 pt-9 justify-center h-full">
+              <Text className="self-center text-lg">
+                Select Network Provider
+              </Text>
+              <View className="px-5 justify-center h-full">
                 {!isLoading &&
                   airtimeCategories.map((item: any, index: any) => (
                     <TouchableOpacity
@@ -297,6 +314,30 @@ const Airtime = (props: Props) => {
                       />
                     </TouchableOpacity>
                   ))}
+              </View>
+            </BottomSheetView>
+          </BottomSheet>
+
+          {/* input pin sheet */}
+          <BottomSheet
+            backdropComponent={renderBackdrop}
+            index={-1}
+            ref={pinRef}
+            snapPoints={["45%"]}
+          >
+            <BottomSheetView style={{ paddingTop: 20 }}>
+              <Text className="self-center text-lg">Enter Payment PIN</Text>
+              <View className="px-5 justify-center h-full">
+                <OTPTextInput
+                  containerStyle={{ marginTop: 30 }}
+                  textInputStyle={styles.roundedTextInput}
+                  inputCount={4}
+                  tintColor={Colors.offset}
+                  offTintColor={"#00000080"}
+                  handleTextChange={setOtpInput}
+                  handleCellTextChange={handleCellTextChange}
+                  ref={otp}
+                />
               </View>
             </BottomSheetView>
           </BottomSheet>
@@ -332,11 +373,19 @@ const Airtime = (props: Props) => {
             <SuccessPayment amount={amount} />
           </Modal>
         </SafeAreaView>
-      </>
+      </View>
     </TouchableWithoutFeedback>
   );
 };
 
 export default Airtime;
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  roundedTextInput: {
+    borderRadius: 10,
+    borderWidth: 1,
+    shadowRadius: 0,
+    shadowOpacity: 0,
+    borderBottomWidth: 1,
+  },
+});

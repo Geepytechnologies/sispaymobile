@@ -1,5 +1,5 @@
 import { ApiObjType, FuncProp, GetFuncProp } from "@/interfaces/api.interface";
-import { Api } from "@/utils/Api";
+import Api from "@/utils/Api";
 
 export const postRequest = async <T, R>({ url, payload }: FuncProp<T>) => {
   const response = await Api.post<R>(url, payload);

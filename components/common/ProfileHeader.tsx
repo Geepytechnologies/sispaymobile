@@ -4,23 +4,22 @@ import { globalstyles } from "@/styles/common";
 import { EvilIcons, FontAwesome } from "@expo/vector-icons";
 import Avatar from "@/assets/images/avatar.svg";
 import { Image } from "react-native";
-import { useSelector } from "react-redux";
-import { RootState } from "@/config/store";
+import { useUserStore } from "@/config/store";
 import { Link } from "expo-router";
 
 type Props = {};
 
 const ProfileHeader = () => {
-  const { currentuser } = useSelector((state: RootState) => state.user);
+  const { user } = useUserStore();
   return (
     <View
       className="px-[10px] py-[14px]"
       style={[globalstyles.rowview, { justifyContent: "space-between" }]}
     >
       <View className="flex flex-row gap-[12px] ">
-        {currentuser?.imageUrl ? (
+        {user?.imageUrl ? (
           <Image
-            src={currentuser?.imageUrl}
+            src={user?.imageUrl}
             className="h-10 w-10 rounded-full object-cover"
           />
         ) : (
@@ -29,7 +28,7 @@ const ProfileHeader = () => {
         <View style={[globalstyles.colview]}>
           <Text className="text-[#000C20] font-[500] text-[13px]">Hello</Text>
           <Text className="text-[#000C20] font-[700] text-[13px]">
-            {currentuser?.firstName} {currentuser?.lastName}
+            {user?.firstName} {user?.lastName}
           </Text>
         </View>
       </View>

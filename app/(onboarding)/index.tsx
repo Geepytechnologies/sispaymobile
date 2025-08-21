@@ -9,8 +9,11 @@ import { router } from "expo-router";
 type Props = {};
 
 const screen1 = (props: Props) => {
+  const handleSkip = () => {
+    router.replace("/(auth)/Register");
+  };
   return (
-    <SafeAreaView className="p-6 bg-white" style={{ flex: 1 }}>
+    <SafeAreaView className="p-[35px] bg-white" style={{ flex: 1 }}>
       {/* logo */}
       <View className="w-full flex items-center justify-center">
         <Image
@@ -20,23 +23,34 @@ const screen1 = (props: Props) => {
         />
       </View>
       {/* content */}
-      <View className="flex flex-col items-center">
-        <Cards />
-        <Text className="font-popp text-[36px] font-[400] mt-[28px] text-appblue">
-          <Text className="font-light">Empowering</Text>{" "}
-          <Text>Business in the </Text>
-          <Text className="font-[700]">cashless era</Text>
-        </Text>
+      <View className="flex flex-col items-center mt-3 flex-1">
+        <View className="w-full flex items-center justify-center h-[300px]">
+          <Image
+            source={require("@/assets/images/cardsimg.png")}
+            style={styles.image}
+            resizeMode="contain"
+          />
+        </View>
+        <View className="flex items-center mt-[28px] mb-[51px]">
+          <Text className="font-popp text-[36px] font-[400] w-[291px] text-center text-appblue">
+            <Text className="font-light">Empowering</Text>{" "}
+            <Text>Business in the </Text>
+            <Text className="font-[700]">cashless era.</Text>
+          </Text>
+        </View>
         <Slider1 className="mt-[50px]" />
-        <Text className="text-[12px] font-[600] text-appblue tracking-[0.18px] mt-[30px]">
+        <Text
+          onPress={handleSkip}
+          className="text-[12px] font-[600] text-appblue tracking-[0.18px] mt-[30px]"
+        >
           Skip {">>>"}
         </Text>
         <TouchableOpacity
           onPress={() => router.replace("/(onboarding)/screen2")}
-          className="mt-[28px] w-full"
+          className="mt-auto w-full"
           activeOpacity={0.8}
         >
-          <PrimaryButton text="Continue" />
+          <PrimaryButton text="Continue" loading={false} />
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -46,6 +60,11 @@ const screen1 = (props: Props) => {
 export default screen1;
 
 const styles = StyleSheet.create({
+  image: {
+    width: 300,
+    height: undefined,
+    aspectRatio: 1,
+  },
   logoimage: {
     width: 100,
     height: undefined,

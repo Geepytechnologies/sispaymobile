@@ -3,7 +3,7 @@ import React from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import DynamicHeader from "@/components/DynamicHeader";
 import { useLocalSearchParams } from "expo-router";
-import { useQuery } from "@tanstack/react-query";
+import { useTransactionById } from "@/queries/wallet";
 import walletService from "@/services/wallet.service";
 import { getStatusColor } from "@/components/common/SingleTransactionWidget";
 import { globalstyles } from "@/styles/common";
@@ -14,15 +14,7 @@ type Props = {};
 const transactionDetails = (props: Props) => {
   const { id } = useLocalSearchParams();
 
-  const {
-    isLoading,
-    data: userTransaction,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ["transaction"],
-    queryFn: () => walletService.getATransaction("67182cea780f7ae264199ab7"),
-  });
+  const { isLoading, data: userTransaction } = useTransactionById(id);
   console.log(userTransaction);
   let transactionType: any;
 

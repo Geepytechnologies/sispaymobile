@@ -1,4 +1,4 @@
-import { ISuccessResponse } from "@/interfaces/general.interface";
+import { ISuccessResponse } from "@/interfaces/responses/general.interface";
 import axios, { AxiosError } from "axios";
 
 const handleAPIError = (error: unknown) => {
@@ -7,17 +7,17 @@ const handleAPIError = (error: unknown) => {
     const axiosError = error as AxiosError;
 
     if (axiosError.response) {
+      if (axiosError.response.status === 400) {
+        return "One or more validation errors occurred.";
+      }
       const serverErrorResponse = axiosError.response.data as ISuccessResponse;
-
       if (
         serverErrorResponse.error &&
         Array.isArray(serverErrorResponse.error)
       ) {
         const errorResponse = serverErrorResponse.error;
-        const errorMessage = errorResponse
-          .map((e) => e.errorMessage)
-          .join("\n");
 
+        const errorMessage = errorResponse.map((e) => e.message).join("\n");
         return errorMessage;
       }
 

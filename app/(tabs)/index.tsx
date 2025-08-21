@@ -21,21 +21,21 @@ import {
 } from "@expo/vector-icons";
 import { globalstyles } from "@/styles/common";
 import { Key, useCallback, useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "@/config/store";
 import accountService from "@/services/account.service";
-import { SET_ACCOUNT } from "@/config/slices/accountSlice";
-import { Link, useFocusEffect } from "expo-router";
+import { Link, router, useFocusEffect } from "expo-router";
 import { Colors } from "@/constants/Colors";
 import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 import TransferWidget from "@/components/TransferWidget";
 import ServiceWidget from "@/components/ServiceWidget";
 import useDeviceInfo from "@/hooks/useDeviceInfo";
-import { useQuery } from "@tanstack/react-query";
 import walletService from "@/services/wallet.service";
 import SingleTransactionWidget from "@/components/common/SingleTransactionWidget";
 import { AxiosInstance } from "axios";
 import ProfileHeader from "@/components/common/ProfileHeader";
+import Auth from "@/utils/auth";
+import { useUserStore } from "@/config/store";
+import { useLastTwoTransactions } from "@/queries/wallet";
+import { useUserAccount as useAccountQuery } from "@/queries/account";
 
 export default function HomeScreen() {
   const [balanceVisible, setBalancevisible] = useState(false);
@@ -44,10 +44,6 @@ export default function HomeScreen() {
   };
 
   // const [accountNumber, setAccountNumber] = useState("");
-
-  const dispatch = useDispatch();
-  const { currentuser } = useSelector((state: RootState) => state.user);
-  const { userAccount } = useSelector((state: RootState) => state.account);
 
   const Api = useAxiosPrivate();
   const deviceinfo = useDeviceInfo();
@@ -58,38 +54,18 @@ export default function HomeScreen() {
     model: deviceinfo.model,
   });
 
+  const { userAccount, setUserAccount } = useUserStore();
   const accountNumber = userAccount && userAccount.accountNumber;
-
-  const {
-    isLoading: accountLoading,
-    data: userAccountData,
-    error: userAccountError,
-    refetch: userAccountRefetch,
-  } = useQuery({
-    queryKey: ["getUserAccount"],
-    queryFn: () => accountService.getUserAccount(Api),
-  });
-
-  const {
-    isLoading,
-    data: userTransactions,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ["lastTwotransactions"],
-    queryFn: () => walletService.getLastTwoTransactions(accountNumber),
-    enabled: !!userAccountData?.result,
-  });
-  // console.log(userTransactions?.result);
+  const { data: userAccountData } = useAccountQuery();
+  const { data: userTransactions } = useLastTwoTransactions(accountNumber);
   useEffect(() => {
     if (userAccountData) {
-      dispatch(SET_ACCOUNT(userAccountData?.result));
+      setUserAccount(userAccountData);
     }
-  }, [userAccountData, dispatch]);
-
+  }, [userAccountData]);
   return (
     <SafeAreaView className="p-[14px]">
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView className="" showsVerticalScrollIndicator={false}>
         {/* header */}
         <ProfileHeader />
         {/* widget */}
@@ -117,7 +93,7 @@ export default function HomeScreen() {
               <Text className="text-white items-center">₦</Text>
               <Text className="text-[20px] font-[700] text-white">
                 {balanceVisible
-                  ? userAccountData?.result.balance + ".00"
+                  ? userAccount?.balance.toLocaleString() + ".00"
                   : "*****"}
               </Text>
             </View>
@@ -142,18 +118,9 @@ export default function HomeScreen() {
         {userTransactions && (
           <View className="bg-white px-3 pt-6 my-5 shadow-md rounded-xl">
             {userTransactions &&
-              userTransactions
-                ?.sort(
-                  (
-                    a: { transactionDate: string | number | Date },
-                    b: { transactionDate: string | number | Date }
-                  ) =>
-                    new Date(b.transactionDate).getTime() -
-                    new Date(a.transactionDate).getTime()
-                )
-                .map((t: any, index: Key | null | undefined) => (
-                  <SingleTransactionWidget key={index} transaction={t} />
-                ))}
+              userTransactions.map((t: any, index: Key | null | undefined) => (
+                <SingleTransactionWidget key={index} transaction={t} />
+              ))}
           </View>
         )}
         <View

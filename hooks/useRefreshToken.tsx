@@ -1,27 +1,25 @@
 import authEndpoints from "@/api/auth";
-import { getFromStore } from "@/utils/localstorage";
-import { Keys } from "@/constants/Keys";
-import axios, { isAxiosError } from "axios";
-import { useSelector } from "react-redux";
-import { RootState } from "@/config/store";
+import axios from "axios";
+import Auth from "@/utils/auth";
 
 const useRefreshtoken = () => {
-  const { currentuser } = useSelector((state: RootState) => state.user);
+  const { getRefreshToken } = Auth;
 
-  const refreshToken = currentuser?.refreshToken;
-
-  const refresh = async (accessToken: string | null) => {
+  const refresh = async (accessToken: string | undefined | null) => {
     try {
-      const { refreshToken } = await getFromStore("sispayuser");
+      const refreshToken = await getRefreshToken();
       const response = await axios.post(`${authEndpoints.refreshtoken}`, {
         accessToken: accessToken,
         refreshToken: refreshToken,
       });
-
-      return response.data.result;
+      // Expecting { result: { accessToken, refreshToken? } }
+      return response.data.result as {
+        accessToken: string;
+        refreshToken?: string;
+      };
     } catch (error) {
+      // Swallow details here; caller will handle logout on failure
       if (axios.isAxiosError(error)) {
-        // console.error("Refresh token error:", error);
       }
     }
   };

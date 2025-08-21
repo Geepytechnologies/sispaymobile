@@ -24,10 +24,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import useDeviceInfo from "@/hooks/useDeviceInfo";
 import accountService from "@/services/account.service";
 import useAxiosPrivate from "@/hooks/useAxiosPrivate";
-import { useDispatch } from "react-redux";
-import { SIGNIN } from "@/config/slices/userSlice";
-import { SET_ACCOUNT } from "@/config/slices/accountSlice";
-import { SET_TOKENS } from "@/config/slices/authSlice";
+import { useUserStore } from "@/config/store";
 import { Colors } from "@/constants/Colors";
 import { globalstyles } from "@/styles/common";
 import DarkLogo from "@/components/common/DarkLogo";
@@ -48,7 +45,7 @@ const Otp = (props: Props) => {
 
   const last4Digits = phone.slice(-4);
 
-  const dispatch = useDispatch();
+  const { setUser } = useUserStore();
 
   const handleCellTextChange = async (text: string, i: number) => {
     if (i === 0) {

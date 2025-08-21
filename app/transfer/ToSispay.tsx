@@ -16,15 +16,14 @@ import { globalstyles } from "@/styles/common";
 import { FontAwesome6, Zocial } from "@expo/vector-icons";
 import { Colors } from "@/constants/Colors";
 import { TransferDTO } from "@/types/AccountDTO";
-import { useSelector } from "react-redux";
-import { RootState } from "@/config/store";
+import { useUserStore } from "@/config/store";
 import Toast from "react-native-toast-message";
 import axios from "axios";
 
 type Props = {};
 
 const ToSispay = (props: Props) => {
-  const { userAccount } = useSelector((state: RootState) => state.account);
+  const { userAccount } = useUserStore();
   const [accountNumber, setAccountNumber] = useState("");
   const [amount, setAmount] = useState<string>();
   const [saveBeneficiary, setSaveBeneficiary] = useState(false);

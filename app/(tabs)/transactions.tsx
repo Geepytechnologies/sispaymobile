@@ -1,9 +1,13 @@
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import React from "react";
-import { useQuery } from "@tanstack/react-query";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import React, { useCallback } from "react";
 import walletService from "@/services/wallet.service";
-import { useSelector } from "react-redux";
-import { RootState } from "@/config/store";
+import { useUserStore } from "@/config/store";
 import { SafeAreaView } from "react-native-safe-area-context";
 import DynamicHeader from "@/components/DynamicHeader";
 import { globalstyles } from "@/styles/common";
@@ -11,31 +15,32 @@ import { FontAwesome } from "@expo/vector-icons";
 import { Colors } from "@/constants/Colors";
 import SingleTransactionWidget from "@/components/common/SingleTransactionWidget";
 import { useFocusEffect } from "expo-router";
+import { useTransactions } from "@/queries/wallet";
 
 type Props = {};
 
 const transactions = (props: Props) => {
-  const { userAccount } = useSelector((state: RootState) => state.account);
-  const accountNumber =
-    (userAccount && userAccount.accountNumber) || "8022507499";
+  const { userAccount } = useUserStore();
+  // const accountNumber =
+  //   (userAccount && userAccount.accountNumber) || "8028434560";
+  const accountNumber = "8028434560"; // Default account number for testing
   const startDate = "";
   const endDate = "";
-  const {
-    isLoading,
-    data: userTransactions,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ["transactions"],
-    queryFn: () =>
-      walletService.getTransactions(startDate, endDate, accountNumber, 1, 10),
-  });
-  useFocusEffect(() => {
-    refetch();
-  });
+  const { isLoading, data: userTransactions } = useTransactions(
+    startDate,
+    endDate,
+    accountNumber,
+    1,
+    10
+  );
+  // useFocusEffect(() => {
+  //   useCallback(() => {
+  //     refetch();
+  //   }, []);
+  // });
   console.log(userTransactions);
   return (
-    <SafeAreaView style={{ flex: 1, padding: 16 }}>
+    <SafeAreaView className="" style={{ flex: 1, padding: 16 }}>
       <DynamicHeader title="Transactions" />
       <View className="mt-5" style={[globalstyles.rowview]}>
         <TouchableOpacity
@@ -49,21 +54,25 @@ const transactions = (props: Props) => {
           <FontAwesome name="angle-down" size={24} color="black" />
         </TouchableOpacity>
       </View>
-      <View className="my-5">
-        {!isLoading &&
-          userTransactions.result
-            ?.sort(
-              (
-                a: { transactionDate: string | number | Date },
-                b: { transactionDate: string | number | Date }
-              ) =>
-                new Date(b.transactionDate).getTime() -
-                new Date(a.transactionDate).getTime()
-            )
-            .map((t: any, index: any) => (
-              <SingleTransactionWidget key={index} transaction={t} />
-            ))}
-      </View>
+      {!isLoading && !userTransactions.result ? (
+        <View className="my-5 flex-1 items-center justify-center">
+          <Text className="text-[16px] text-gray-500">
+            No transactions found
+          </Text>
+        </View>
+      ) : (
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          className="mt-5 flex-1"
+        >
+          <View className="">
+            {userTransactions &&
+              userTransactions.result.map((t: any, index: any) => (
+                <SingleTransactionWidget key={index} transaction={t} />
+              ))}
+          </View>
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 };

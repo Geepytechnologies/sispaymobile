@@ -25,15 +25,14 @@ import { ScrollView } from "react-native";
 import Toast from "react-native-toast-message";
 import { addToStore } from "@/utils/localstorage";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
-import { useDispatch } from "react-redux";
-import { SIGNIN } from "@/config/slices/userSlice";
 import axios from "axios";
-import { SET_TOKENS } from "@/config/slices/authSlice";
 import { useAuth } from "@/utils/AuthProvider";
 import accountService from "@/services/account.service";
 import useAxiosPrivate from "@/hooks/useAxiosPrivate";
-import { SET_ACCOUNT } from "@/config/slices/accountSlice";
 import { LoadingIndicator } from "@/components/common/LoadingIndicator";
+import { saveUser } from "@/utils/userStore";
+import Auth from "@/utils/auth";
+import { useUserStore } from "@/config/store";
 
 type Props = {};
 
@@ -43,8 +42,9 @@ const Login = (props: Props) => {
   const [passwordvisible, setPasswordvisible] = useState(false);
   const deviceinfo = useDeviceInfo();
   const { expoPushToken } = usePushNotifications();
-  const dispatch = useDispatch();
   const axiosPrivate = useAxiosPrivate();
+  const { setToken, setRefreshToken } = Auth;
+  const { setUser } = useUserStore();
 
   const [formData, setFormData] = useState({ phone: "", password: "" });
 
@@ -81,25 +81,17 @@ const Login = (props: Props) => {
     };
     try {
       const res = await authService.signin(formdetails);
-
-      dispatch(SIGNIN(res.result));
+      await setToken(res.result.accessToken);
+      await setRefreshToken(res.result.refreshToken);
+      setUser(res.result);
       setAccessToken(res.result.accessToken);
-      dispatch(
-        SET_TOKENS({
-          accessToken: res.result.accessToken,
-          refreshToken: res.result.refreshToken,
-        })
-      );
-      //const userAccount = await accountService.getUserAccount(axiosPrivate);
-      // dispatch(SET_ACCOUNT(userAccount.result));
-
-      // router.push("/(tabs)");
 
       Toast.show({
         type: "success",
         text1: "Success",
         text2: "Welcome",
       });
+      router.push("/(tabs)");
     } catch (error) {
       if (axios.isAxiosError(error)) {
         if (error.response?.status == 400) {

@@ -1,4 +1,3 @@
-import { SIGNOUT } from "@/config/slices/userSlice";
 import authService from "@/services/auth.service";
 import { globalstyles } from "@/styles/common";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -15,9 +14,8 @@ import { View } from "react-native";
 import { StyleSheet, Image, Platform } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useDispatch, useSelector } from "react-redux";
+import { useUserStore } from "@/config/store";
 import Avatar from "@/assets/images/avatar.svg";
-import { RootState } from "@/config/store";
 import { ScreenDimensions } from "@/constants/Dimensions";
 import {
   Entypo,
@@ -26,18 +24,15 @@ import {
   MaterialIcons,
 } from "@expo/vector-icons";
 import { Colors } from "@/constants/Colors";
-import { SET_TOKENS } from "@/config/slices/authSlice";
 import { useAuth } from "@/utils/AuthProvider";
 
 export default function TabTwoScreen() {
-  const { currentuser } = useSelector((state: RootState) => state.user);
+  const { user, clearUser } = useUserStore();
   const { setAccessToken } = useAuth();
-  const dispatch = useDispatch();
   const handleLogout = async () => {
     await authService.Logout();
     setAccessToken("");
-    // router.re("/(auth)/Login");
-    dispatch(SET_TOKENS({ accessToken: "", refreshToken: "" }));
+    clearUser();
   };
   const menuData = [
     {
@@ -90,9 +85,9 @@ export default function TabTwoScreen() {
           <Avatar height={80} width={80} />
           <View style={[globalstyles.colview]}>
             <Text className="text-white font-inter font-[600] leading-[26px]">
-              {currentuser?.firstName + " " + currentuser?.lastName}
+              {user?.firstName + " " + user?.lastName}
             </Text>
-            <Text className="text-white text-[12px]">{currentuser?.email}</Text>
+            <Text className="text-white text-[12px]">{user?.email}</Text>
           </View>
         </View>
       </View>
