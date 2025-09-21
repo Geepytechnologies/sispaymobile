@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Sispay",
-    "slug": "Sispay",
+    "slug": "sispay",
     "version": "1.0.0",
     "orientation": "portrait",
     "newArchEnabled": true,
@@ -29,8 +29,14 @@
         "foregroundImage": "./assets/images/splashscreen.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.geepytech.sispay",
-      "googleServicesFile": "./google-services.json"
+      "package": "com.morphlith.sispay",
+      "googleServicesFile": "./google-services.json",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -52,7 +58,8 @@
         "expo-build-properties",
         {
           "android": {
-            "enableProguardInReleaseBuilds": true
+            "enableProguardInReleaseBuilds": true,
+            "enableMinifyInReleaseBuilds": true
           }
         }
       ],
@@ -73,7 +80,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "8a3afb6c-f313-4279-bea6-43dc7293e935"
+        "projectId": "c789c251-a7fe-458d-bed9-745377db24ef"
       }
     },
     "runtimeVersion": {
@@ -81,6 +88,7 @@
     },
     "updates": {
       "url": "https://u.expo.dev/8a3afb6c-f313-4279-bea6-43dc7293e935"
-    }
+    },
+    "owner": "morphlith"
   }
 }
