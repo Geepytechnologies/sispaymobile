@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "sispayapp",
-    "slug": "sispayapp",
+    "name": "Sispay",
+    "slug": "Sispay",
     "version": "1.0.0",
     "orientation": "portrait",
     "newArchEnabled": true,
@@ -24,7 +24,7 @@
       }
     },
     "android": {
-      "proguard": true,
+      "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/splashscreen.png",
         "backgroundColor": "#ffffff"
@@ -62,7 +62,8 @@
           "faceIDPermission": "Allow $(PRODUCT_NAME) to use Face ID."
         }
       ],
-      "expo-font"
+      "expo-font",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true

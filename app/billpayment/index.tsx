@@ -34,7 +34,6 @@ import BottomSheet, {
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import Modal from "react-native-modal";
-import { Backdrop } from "@/components/common/Backdrop";
 import { Colors } from "@/constants/Colors";
 import * as Contacts from "expo-contacts";
 import { useUserStore } from "@/config/store";
@@ -45,34 +44,34 @@ import { PurchaseAirtimeDTO } from "@/types/billpayment";
 import SuccessPayment from "@/components/billpayment/SuccessPayment";
 import axios from "axios";
 import Toast from "react-native-toast-message";
+import SecureKeypad from "@/components/dialogs/SecureKeypad";
+import AirtimeConfirmDetails from "@/components/billpayment/AirtimeConfirmDetails";
+import { AirtimeCategory } from "@/interfaces/airtime.interface";
+import { useValidateAccountPin } from "@/queries/account";
+import SetPinSheet from "@/components/bottomsheets/SetPinSheet";
+import InputPinSheet from "@/components/bottomsheets/InputPinSheet";
+import BackDrop from "@/components/bottomsheets/BackDrop";
+import { set } from "lodash";
+import ToastProvider from "@/context/ToastProvider";
 type Props = {};
 
 const Airtime = (props: Props) => {
-  const [otpInput, setOtpInput] = useState<string>("");
-  const otp = useRef<OTPTextView>(null);
+  const [pin, setPin] = useState<string>("");
 
   const { user, userAccount } = useUserStore();
   // const { contacts, getContacts } = useContacts();
   const snapPoints = ["40%"];
-  const [isModalVisible, setModalVisible] = useState(false);
-  const [isContactsModalVisible, setIsContactsModalVisible] = useState(false);
   const [selectedPhone, setSelectedPhone] = useState(user?.phoneNumber);
   const [successModal, setSuccessModal] = useState(false);
   const [amount, setAmount] = useState("");
   const [purchaseLoading, setPurchaseLoading] = useState(false);
 
-  interface AirtimeCategory {
-    id: string;
-    name: string;
-    logoUrl: any;
-  }
   const toggleModal = () => {
     setSuccessModal(!successModal);
   };
   const { isLoading, data: airtimeCategories } = useAirtimeCategories();
   const [airtimeCategory, setAirtimeCategory] =
     useState<AirtimeCategory | null>(null);
-
   useEffect(() => {
     if (airtimeCategories && airtimeCategories.length > 0) {
       setAirtimeCategory(airtimeCategories[0]);
@@ -80,6 +79,24 @@ const Airtime = (props: Props) => {
   }, [airtimeCategories]);
   const [contacts, setContacts] = useState<Contacts.Contact[]>([]);
   const [permissionGranted, setPermissionGranted] = useState(false);
+  const [pinValidationError, setPinValidationError] = useState(false);
+
+  const { validatePin, validatingPin } = useValidateAccountPin({
+    onSuccess: (message) => {
+      console.log(message);
+      //buyAirtime();
+    },
+    onError: (error) => {
+      setPinValidationError(true);
+      Toast.show({
+        type: "error",
+        text1: "Attention!!!",
+        text2: error,
+        visibilityTime: 2000,
+        autoHide: true,
+      });
+    },
+  });
 
   useEffect(() => {
     const getContactsPermission = async () => {
@@ -127,13 +144,23 @@ const Airtime = (props: Props) => {
   };
   const bottomsheetRef = useRef<BottomSheet>(null);
   const contactsRef = useRef<BottomSheet>(null);
-  const pinRef = useRef<BottomSheet>(null);
-
+  const detailsRef = useRef<BottomSheet>(null);
+  const inputPinRef = useRef<BottomSheet>(null);
+  const setPinRef = useRef<BottomSheet>(null);
+  // const snapPoints = useMemo(() => ["25%", "50%"], []);
   const closePinModal = () => {
-    pinRef.current?.close();
+    inputPinRef.current?.close();
   };
   const openPinModal = () => {
-    pinRef.current?.expand();
+    if (userAccount?.accountPinSet) {
+      inputPinRef.current?.expand();
+    } else {
+      setPinRef.current?.expand();
+    }
+  };
+  const openDetailModal = () => {
+    //pinRef.current?.snapToIndex(1);
+    detailsRef.current?.expand();
   };
 
   const showmodal = () => {
@@ -149,16 +176,8 @@ const Airtime = (props: Props) => {
     bottomsheetRef.current?.close();
     setAirtimeCategory(item);
   };
-  const renderBackdrop = (props: any) => (
-    <BottomSheetBackdrop
-      {...props}
-      disappearsOnIndex={-1}
-      appearsOnIndex={0}
-      opacity={0.7}
-    />
-  );
 
-  const buyAirtime = async () => {
+  const buyAirtime = async (userPin: string) => {
     if (selectedPhone == undefined || selectedPhone == null) {
       return;
     }
@@ -168,6 +187,7 @@ const Airtime = (props: Props) => {
       }
     }
     const airtimeDetails: PurchaseAirtimeDTO = {
+      accountPin: userPin,
       accountNumber: userAccount?.accountNumber,
       amount: Number(amount),
       phoneNumber: selectedPhone,
@@ -180,6 +200,7 @@ const Airtime = (props: Props) => {
       console.log(res.result);
       if (res.result) {
         toggleModal();
+        closeOpenModals();
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -188,6 +209,8 @@ const Airtime = (props: Props) => {
             type: "error",
             text1: "Attention!!!",
             text2: error.response.data.message,
+            visibilityTime: 1000,
+            autoHide: true,
           });
         }
         if (
@@ -198,33 +221,38 @@ const Airtime = (props: Props) => {
             type: "info",
             text1: "Attention!!!",
             text2: "You Haven't Completed Your KYC",
+            visibilityTime: 1000,
+            autoHide: true,
           });
         }
-        console.log(error.message);
         if (error.response) {
-          console.log(error.response.data);
-          console.log(error.response.status);
-          console.log(error.response.headers);
+          Toast.show({
+            type: "error",
+            text1: "Attention!!!",
+            text2: error.response?.data.Message || "Something went wrong",
+            visibilityTime: 1000,
+            autoHide: true,
+          });
         }
       }
     } finally {
       setPurchaseLoading(false);
     }
   };
-  const handleCellTextChange = async (text: string, i: number) => {
-    if (i === 0) {
-      const clippedText = await Clipboard.getStringAsync();
-      if (clippedText.slice(0, 1) === text) {
-        otp.current?.setValue(clippedText, true);
-      }
-    }
+  const closeOpenModals = () => {
+    detailsRef.current?.close();
+    inputPinRef.current?.close();
+    setPinRef.current?.close();
+  };
+  const handlePay = (pin: string) => {
+    buyAirtime(pin);
   };
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View style={{ flex: 1 }}>
-        <View className="z-50">
+        {/* <View className="z-50">
           <Toast />
-        </View>
+        </View> */}
         <SafeAreaView
           style={{ flex: 1, padding: 16, backgroundColor: "white" }}
         >
@@ -259,7 +287,7 @@ const Airtime = (props: Props) => {
                 className="font-[700] text-[20px] font-popp  w-[200px]"
                 onChangeText={(text) => setSelectedPhone(text)}
                 value={selectedPhone}
-                maxLength={11}
+                maxLength={13}
               />
             </View>
             <FontAwesome
@@ -271,13 +299,34 @@ const Airtime = (props: Props) => {
           </View>
           <AirtimeTopUpwidget
             loading={false}
-            purchaseAirtime={() => openPinModal()}
+            purchaseAirtime={() => openDetailModal()}
             amount={amount}
             setAmount={setAmount}
           />
+          {/* airtime details */}
+          <BottomSheet
+            backdropComponent={BackDrop}
+            index={-1}
+            ref={detailsRef}
+            snapPoints={["60%"]}
+          >
+            <BottomSheetView style={{ padding: 16 }}>
+              <AirtimeConfirmDetails
+                phoneNumber={selectedPhone}
+                product={airtimeCategory}
+                amount={amount}
+              />
+              <TouchableOpacity
+                onPress={() => openPinModal()}
+                className="bg-appblue p-4 rounded-[20px] mt-5"
+              >
+                <Text className="text-white self-center font-[600]">Pay</Text>
+              </TouchableOpacity>
+            </BottomSheetView>
+          </BottomSheet>
           {/* network options sheet */}
           <BottomSheet
-            backdropComponent={renderBackdrop}
+            backdropComponent={BackDrop}
             index={-1}
             ref={bottomsheetRef}
             snapPoints={["45%"]}
@@ -297,7 +346,11 @@ const Airtime = (props: Props) => {
                       <View className="flex flex-row items-center gap-3">
                         <Image
                           source={{ uri: item.logoUrl }}
-                          style={{ height: 40, width: 40, objectFit: "cover" }}
+                          style={{
+                            height: 40,
+                            width: 40,
+                            objectFit: "cover",
+                          }}
                           className="rounded-full "
                         />
                         <Text>{item.name}</Text>
@@ -319,32 +372,23 @@ const Airtime = (props: Props) => {
           </BottomSheet>
 
           {/* input pin sheet */}
-          <BottomSheet
-            backdropComponent={renderBackdrop}
-            index={-1}
-            ref={pinRef}
-            snapPoints={["45%"]}
-          >
-            <BottomSheetView style={{ paddingTop: 20 }}>
-              <Text className="self-center text-lg">Enter Payment PIN</Text>
-              <View className="px-5 justify-center h-full">
-                <OTPTextInput
-                  containerStyle={{ marginTop: 30 }}
-                  textInputStyle={styles.roundedTextInput}
-                  inputCount={4}
-                  tintColor={Colors.offset}
-                  offTintColor={"#00000080"}
-                  handleTextChange={setOtpInput}
-                  handleCellTextChange={handleCellTextChange}
-                  ref={otp}
-                />
-              </View>
-            </BottomSheetView>
-          </BottomSheet>
+          <InputPinSheet
+            ref={inputPinRef}
+            isError={pinValidationError}
+            setIsError={setPinValidationError}
+            validatePin={handlePay}
+            validatingPin={purchaseLoading}
+          />
+          {/* set pin sheet */}
+          <SetPinSheet
+            ref={setPinRef}
+            paymentAction={handlePay}
+            processing={purchaseLoading}
+          />
 
           {/* contacts sheet */}
           <BottomSheet
-            backdropComponent={renderBackdrop}
+            backdropComponent={BackDrop}
             index={-1}
             ref={contactsRef}
             snapPoints={snapPoints}
@@ -373,6 +417,7 @@ const Airtime = (props: Props) => {
             <SuccessPayment amount={amount} />
           </Modal>
         </SafeAreaView>
+        <Toast />
       </View>
     </TouchableWithoutFeedback>
   );

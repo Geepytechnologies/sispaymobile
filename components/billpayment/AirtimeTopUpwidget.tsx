@@ -59,16 +59,15 @@ const AirtimeTopUpwidget = ({
           </TouchableOpacity>
         ))}
       </View>
-      <View style={[globalstyles.rowview, { justifyContent: "space-between" }]}>
-        <View
-          style={[globalstyles.rowview]}
-          className="gap-2 underline text-primary "
-        >
-          <Text className="text-primary">₦</Text>
+      <View
+        className=""
+        style={[globalstyles.rowview, { justifyContent: "space-between" }]}
+      >
+        <View style={[globalstyles.rowview]} className="gap-2 underline ">
+          <Text className="">₦</Text>
           <TextInput
-            style={{ color: "#14A673" }}
             value={amount}
-            className=""
+            className="text-[20px] font-[500]"
             placeholder="50 - 500,000"
             keyboardType="numeric"
             onChangeText={(text) => setAmount(text)}
@@ -87,6 +86,7 @@ const AirtimeTopUpwidget = ({
           )}
         </TouchableOpacity>
       </View>
+      <View className="border border-dashed mt-4"></View>
     </View>
   );
 };

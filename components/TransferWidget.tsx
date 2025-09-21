@@ -16,11 +16,11 @@ const TransferWidget = (props: Props) => {
         className="flex flex-col"
       >
         <View
-          style={[{ backgroundColor: "rgba(3, 29, 66, 0.2)" }]}
+          style={[{ backgroundColor: "#DCFCE7" }]}
           className="flex items-center justify-center rounded-full h-[50px] w-[50px] 
             "
         >
-          <Zocial name="persona" size={24} color={Colors.primary} />
+          <Zocial name="persona" size={24} color={"#F46717"} />
         </View>
         <Text className="text-[12px] font-popp font-[500]">To Sispay</Text>
       </TouchableOpacity>

@@ -31,7 +31,7 @@ import {
 
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
-import AuthContextProvider from "@/utils/AuthProvider";
+import { useAppInitialization } from "@/hooks/useAppInitialization";
 import {
   useQuery,
   useMutation,
@@ -41,6 +41,9 @@ import {
 } from "@tanstack/react-query";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "../global.css";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
+import { View } from "react-native";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -49,9 +52,8 @@ export const unstable_settings = {
   ininitialRouteName: "(tabs)",
 };
 export default function RootLayout() {
-  // App resume auth and optional lock
-  const useAppResumeAuth = require("@/hooks/useAppResumeAuth").default;
-  useAppResumeAuth();
+  // Initialize app with enhanced auth system
+  // const { isInitialized, isAuthenticated, error } = useAppInitialization();
   const { expoPushToken } = usePushNotifications();
 
   const colorScheme = useColorScheme();
@@ -71,7 +73,6 @@ export default function RootLayout() {
     Montserrat_600SemiBold,
     Montserrat_700Bold,
   });
-
   useEffect(() => {
     if (loaded) {
       SplashScreen.hideAsync();
@@ -81,50 +82,59 @@ export default function RootLayout() {
   if (!loaded) {
     return null;
   }
+
   const queryClient = new QueryClient();
   return (
     <GestureHandlerRootView>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider
-          value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-        >
-          <Stack>
-            <Stack.Screen
-              name="(onboarding)"
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen name="billpayment" options={{ headerShown: false }} />
-            <Stack.Screen name="contact" options={{ headerShown: false }} />
-            <Stack.Screen name="helpcenter" options={{ headerShown: false }} />
-            <Stack.Screen name="settings" options={{ headerShown: false }} />
-            <Stack.Screen name="withdraw" options={{ headerShown: false }} />
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="transactionDetails"
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="transfer/ToSispay"
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="transfer/toBankAccount"
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="transfer/qrCodePage"
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="transfer/cameraScreen"
-              options={{ headerShown: false }}
-            />
+      <SafeAreaProvider>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider
+            value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+          >
+            <Stack>
+              <Stack.Screen
+                name="(onboarding)"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="billpayment"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen name="contact" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="helpcenter"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen name="settings" options={{ headerShown: false }} />
+              <Stack.Screen name="withdraw" options={{ headerShown: false }} />
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="transactionDetails"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="transfer/ToSispay"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="transfer/toBankAccount"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="transfer/qrCodePage"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="transfer/cameraScreen"
+                options={{ headerShown: false }}
+              />
 
-            <Stack.Screen name="+not-found" />
-          </Stack>
-        </ThemeProvider>
-      </QueryClientProvider>
+              <Stack.Screen name="+not-found" />
+            </Stack>
+          </ThemeProvider>
+        </QueryClientProvider>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }

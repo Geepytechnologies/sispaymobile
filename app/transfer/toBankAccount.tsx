@@ -59,7 +59,7 @@ const ToBankAccount = (props: Props) => {
   const fetchAcountdetails = async (account: string) => {
     setAccountFetching(true);
     try {
-      const res = await walletService.SisPayNameEnquiry(account);
+      const res = await walletService.NameEnquiry(bankCode, account);
       setUserAccountDetails({
         accountName: res.result.accountName,
         accountNumber: res.result.accountNumber,
@@ -194,7 +194,7 @@ const ToBankAccount = (props: Props) => {
                 />
               </View>
               <View>
-                <Text className="font-[500] text-base">
+                <Text className="font-[500] text-base text-wrap">
                   {userAccountDetails.accountName}
                 </Text>
                 <Text className="text-gray-500 text-sm">

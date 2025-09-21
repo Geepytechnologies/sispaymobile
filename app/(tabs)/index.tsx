@@ -17,20 +17,17 @@ import {
   Feather,
   FontAwesome,
   Ionicons,
+  MaterialCommunityIcons,
   MaterialIcons,
 } from "@expo/vector-icons";
 import { globalstyles } from "@/styles/common";
 import { Key, useCallback, useEffect, useState } from "react";
 import accountService from "@/services/account.service";
 import { Link, router, useFocusEffect } from "expo-router";
-import { Colors } from "@/constants/Colors";
 import useAxiosPrivate from "@/hooks/useAxiosPrivate";
-import TransferWidget from "@/components/TransferWidget";
 import ServiceWidget from "@/components/ServiceWidget";
 import useDeviceInfo from "@/hooks/useDeviceInfo";
-import walletService from "@/services/wallet.service";
-import SingleTransactionWidget from "@/components/common/SingleTransactionWidget";
-import { AxiosInstance } from "axios";
+
 import ProfileHeader from "@/components/common/ProfileHeader";
 import Auth from "@/utils/auth";
 import { useUserStore } from "@/config/store";
@@ -48,11 +45,11 @@ export default function HomeScreen() {
   const Api = useAxiosPrivate();
   const deviceinfo = useDeviceInfo();
 
-  console.log({
-    id: deviceinfo.deviceId,
-    manu: deviceinfo.manufacturer,
-    model: deviceinfo.model,
-  });
+  // console.log({
+  //   id: deviceinfo.deviceId,
+  //   manu: deviceinfo.manufacturer,
+  //   model: deviceinfo.model,
+  // });
 
   const { userAccount, setUserAccount } = useUserStore();
   const accountNumber = userAccount && userAccount.accountNumber;
@@ -64,75 +61,73 @@ export default function HomeScreen() {
     }
   }, [userAccountData]);
   return (
-    <SafeAreaView className="p-[14px]">
-      <ScrollView className="" showsVerticalScrollIndicator={false}>
-        {/* header */}
-        <ProfileHeader />
-        {/* widget */}
-        <View className="flex flex-row items-center mt-5 justify-between px-5 bg-appblue rounded-[20px] min-h-[120px]">
-          <View className="flex flex-col gap-9">
-            <View className="flex flex-row items-center">
-              <Ionicons name="shield-checkmark-sharp" size={17} color="white" />
-              <Text className="text-white  ml-1 font-popp">
-                Available Balance
-              </Text>
-              <TouchableOpacity
-                className="p-2"
-                onPress={toggleBalance}
-                activeOpacity={0.8}
-              >
-                <Feather
-                  suppressHighlighting
-                  name={balanceVisible ? "eye" : "eye-off"}
+    <SafeAreaView className="px-[14px] pt-[14px] flex-1">
+      <View className="h-screen">
+        <ScrollView className="mb-20" showsVerticalScrollIndicator={false}>
+          {/* header */}
+          <ProfileHeader />
+          {/* widget */}
+          <View className="flex flex-row items-center justify-center mt-5 px-5 bg-appblue rounded-[20px] min-h-[120px]">
+            <View className="flex flex-col gap-3">
+              <View className="flex flex-row items-center">
+                <Ionicons
+                  name="shield-checkmark-sharp"
                   size={17}
+                  color="white"
+                />
+                <Text className="text-white  ml-1 font-popp">
+                  Available Balance
+                </Text>
+                <TouchableOpacity
+                  className="p-2"
+                  onPress={toggleBalance}
+                  activeOpacity={0.8}
+                >
+                  <Feather
+                    suppressHighlighting
+                    name={balanceVisible ? "eye" : "eye-off"}
+                    size={17}
+                    color="white"
+                  />
+                </TouchableOpacity>
+              </View>
+              <View
+                style={[{ gap: 5 }]}
+                className="flex flex-row items-center justify-center"
+              >
+                <Text className="text-white items-center">₦</Text>
+                <Text className="text-[25px] font-[700] text-white">
+                  {balanceVisible
+                    ? userAccount?.balance.toLocaleString() + ".00"
+                    : "*****"}
+                </Text>
+              </View>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => router.push("/(tabs)/transactions")}
+                className="flex flex-row items-center justify-center"
+              >
+                <Text className="text-white font-popp">
+                  Transaction History
+                </Text>
+                <MaterialCommunityIcons
+                  name="chevron-double-right"
+                  size={24}
                   color="white"
                 />
               </TouchableOpacity>
             </View>
-            <View style={[{ gap: 5 }]} className="flex flex-row items-center">
-              <Text className="text-white items-center">₦</Text>
-              <Text className="text-[20px] font-[700] text-white">
-                {balanceVisible
-                  ? userAccount?.balance.toLocaleString() + ".00"
-                  : "*****"}
-              </Text>
-            </View>
           </View>
-          <View className="flex flex-col gap-9">
-            <Link
-              href={"/(tabs)/transactions"}
-              suppressHighlighting={true}
-              className="text-white font-popp"
-            >
-              Transaction History {">"}
-            </Link>
-            <TouchableOpacity
-              className="bg-white rounded-[20px] px-3 py-2"
-              activeOpacity={0.9}
-            >
-              <Text>{"+"} Add Money</Text>
-            </TouchableOpacity>
+
+          <View
+            style={{ gap: 30 }}
+            className="bg-white px-3 py-6 my-5 shadow-md rounded-xl"
+          >
+            {/* services */}
+            <ServiceWidget />
           </View>
-        </View>
-        {/* latest transactions */}
-        {userTransactions && (
-          <View className="bg-white px-3 pt-6 my-5 shadow-md rounded-xl">
-            {userTransactions &&
-              userTransactions.map((t: any, index: Key | null | undefined) => (
-                <SingleTransactionWidget key={index} transaction={t} />
-              ))}
-          </View>
-        )}
-        <View
-          style={{ gap: 30 }}
-          className="bg-white px-3 py-6 my-5 shadow-md rounded-xl"
-        >
-          {/* Transfer */}
-          <TransferWidget />
-          {/* services */}
-          <ServiceWidget />
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }

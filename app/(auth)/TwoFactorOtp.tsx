@@ -46,13 +46,15 @@ const TwoFactorOtp = (props: Props) => {
   const axiosInstance = useAxiosPrivate();
 
   const last4Digits = phone.slice(-4);
+  //const testphone = "08106974201";
+  // const last4Digits = testphone.slice(-4);
 
   const { setUser, setUserAccount } = useUserStore();
 
   const handleCellTextChange = async (text: string, i: number) => {
     if (i === 0) {
       const clippedText = await Clipboard.getStringAsync();
-      if (clippedText.slice(0, 1) === text) {
+      if (clippedText?.slice(0, 1) === text) {
         otp.current?.setValue(clippedText, true);
       }
     }
@@ -79,7 +81,7 @@ const TwoFactorOtp = (props: Props) => {
       const userAccount = await accountService.getUserAccount();
       setUserAccount(userAccount);
 
-      // router.push("/(tabs)");
+      router.push("/(tabs)");
 
       Toast.show({
         type: "success",
@@ -104,11 +106,12 @@ const TwoFactorOtp = (props: Props) => {
     <>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <SafeAreaView
+          className="bg-white"
           style={[globalstyles.centerview, { flex: 1, padding: 16 }]}
         >
           <Toast />
           <DarkLogo width={200} />
-          <Text className="font-inter font-[700] text-[#000C20] text-[22px]">
+          <Text className="font-inter text-center font-[700] text-[#000C20] text-[22px]">
             Let&apos;s Complete Your Verification
           </Text>
           <Text className="text-[#A1A1A1] font-[500] text-[13px] mt-[8px]">

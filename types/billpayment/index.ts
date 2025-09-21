@@ -3,6 +3,7 @@ export interface PurchaseAirtimeDTO {
   amount: number;
   phoneNumber: string;
   accountNumber: string | undefined;
+  accountPin: string;
 }
 export interface PurchaseDataDTO {
   serviceCategoryId: string | undefined;

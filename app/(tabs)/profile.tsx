@@ -33,6 +33,7 @@ export default function TabTwoScreen() {
     await authService.Logout();
     setAccessToken("");
     clearUser();
+    router.replace("/(auth)/Login");
   };
   const menuData = [
     {

@@ -1,9 +1,11 @@
 import { CONSTANTS } from "@/constants";
 import { IAccountResponse } from "@/interfaces/responses/account.interface";
 import { VerifyAndCreateAccountDTO } from "@/types/AccountDTO";
-import { getRequest } from "@/utils/apiCaller";
+import { getRequest, postRequest } from "@/utils/apiCaller";
 import axios, { AxiosInstance } from "axios";
 import { axiosInstance } from "@/config/axios";
+import { ISuccessResponse } from "@/interfaces/general.interface";
+import { ValidatePinRequest } from "@/interfaces/requests/account.interface";
 export enum VerificationType {
   BVN,
   NIN,
@@ -68,42 +70,19 @@ class AccountService {
     }
   }
 
-  async CreatePin(api: AxiosInstance, accountPin: string) {
-    try {
-      const res = await api.post(
-        `${CONSTANTS.APIURL}/Account/CreatePin?AccountPin=${accountPin}`
-      );
-      return res.data;
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        console.error("Validate pin error::", {
-          statusCode: error.response?.status,
-          message: error.message,
-          data: error.response?.data,
-        });
-      }
-      //   console.error("Verify and create account error:", error);
-      throw error;
-    }
+  async CreatePin(accountPin: string) {
+    return await postRequest<ValidatePinRequest, ISuccessResponse>({
+      url: `${CONSTANTS.APIURL}/Account/CreatePin`,
+      payload: { accountPin: accountPin },
+    });
   }
-  async ValidatePin(api: AxiosInstance, accountPin: string) {
-    try {
-      const res = await api.post(
-        `${CONSTANTS.APIURL}/api/Account/ValidatePin?AccountPin=${accountPin}`
-      );
-      return res.data;
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        console.error("Validate pin error::", {
-          statusCode: error.response?.status,
-          message: error.message,
-          data: error.response?.data,
-        });
-      }
-      //   console.error("Verify and create account error:", error);
-      throw error;
-    }
+  async ValidatePin(accountPin: string) {
+    return await postRequest<ValidatePinRequest, ISuccessResponse>({
+      url: `${CONSTANTS.APIURL}/Account/ValidatePin`,
+      payload: { accountPin },
+    });
   }
+
   async ChangePin(api: AxiosInstance, oldPin: string, newPin: string) {
     try {
       const res = await api.post(

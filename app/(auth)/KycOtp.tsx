@@ -94,7 +94,7 @@ const KycOtp = (props: Props) => {
         >
           <Toast />
           <DarkLogo width={200} />
-          <Text className="font-inter font-[700] text-[#000C20] text-[22px]">
+          <Text className="font-inter text-center font-[700] text-[#000C20] text-[22px]">
             Let&apos;s Complete Your Verification
           </Text>
           <Text className="text-[#A1A1A1] font-[500] text-[13px] mt-[8px]">
