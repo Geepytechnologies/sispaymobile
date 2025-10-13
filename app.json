@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "newArchEnabled": true,
-    "icon": "./assets/images/splashscreen.png",
+    "icon": "./assets/images/app_icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "splash": {
@@ -14,7 +14,7 @@
       "backgroundColor": "#ffffff"
     },
     "notification": {
-      "icon": "./assets/images/splashscreen.png",
+      "icon": "./assets/images/app_icon.png",
       "color": "#ffffff"
     },
     "ios": {
@@ -26,7 +26,7 @@
     "android": {
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/splashscreen.png",
+        "foregroundImage": "./assets/images/app_icon.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.morphlith.sispay",
@@ -45,6 +45,19 @@
     "plugins": [
       "expo-router",
       "expo-secure-store",
+      // [
+      //   "react-native-share",
+      //   {
+      //     "ios": ["fb", "instagram", "twitter", "tiktoksharesdk"],
+      //     "android": [
+      //       "com.facebook.katana",
+      //       "com.instagram.android",
+      //       "com.twitter.android",
+      //       "com.zhiliaoapp.musically"
+      //     ],
+      //     "enableBase64ShareAndroid": true
+      //   }
+      // ],
       [
         "expo-camera",
         {

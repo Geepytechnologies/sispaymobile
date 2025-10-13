@@ -86,10 +86,8 @@ const Register = (props: Props) => {
           });
         }
       }
-      console.log(res);
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        console.log(error.response);
         if (error.response?.status == 409) {
           Toast.show({
             type: "error",
@@ -115,9 +113,6 @@ const Register = (props: Props) => {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
     >
-      <View style={{ zIndex: 100 }}>
-        <Toast />
-      </View>
       <ScrollView
         className="pb-6"
         showsVerticalScrollIndicator={false}

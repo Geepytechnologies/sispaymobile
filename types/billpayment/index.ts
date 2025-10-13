@@ -10,7 +10,7 @@ export interface PurchaseDataDTO {
   bundleCode: string;
   amount: number;
   phoneNumber: string;
-  accountNumber: string | undefined;
+  accountPin: string;
 }
 export interface PurchaseCableTvDTO {
   serviceCategoryId: string | undefined;

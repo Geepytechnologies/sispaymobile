@@ -4,6 +4,7 @@ import {
   Image,
   ImageSourcePropType,
   Keyboard,
+  StatusBar,
   StyleSheet,
   Text,
   TextInput,
@@ -12,7 +13,7 @@ import {
   View,
 } from "react-native";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "expo-router";
+import { Link, router } from "expo-router";
 import {
   AntDesign,
   FontAwesome,
@@ -21,14 +22,8 @@ import {
 } from "@expo/vector-icons";
 import { globalstyles } from "@/styles/common";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Backbutton from "@/components/buttons/Backbutton";
-import { useMutation, useQuery } from "@tanstack/react-query";
 import billpaymentService from "@/services/billpayment.service";
 import DynamicHeader from "@/components/DynamicHeader";
-import OTPTextView from "react-native-otp-textinput";
-import OTPTextInput from "react-native-otp-textinput";
-import * as Clipboard from "expo-clipboard";
-import useContacts from "@/hooks/useContacts";
 import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetView,
@@ -44,15 +39,12 @@ import { PurchaseAirtimeDTO } from "@/types/billpayment";
 import SuccessPayment from "@/components/billpayment/SuccessPayment";
 import axios from "axios";
 import Toast from "react-native-toast-message";
-import SecureKeypad from "@/components/dialogs/SecureKeypad";
 import AirtimeConfirmDetails from "@/components/billpayment/AirtimeConfirmDetails";
 import { AirtimeCategory } from "@/interfaces/airtime.interface";
 import { useValidateAccountPin } from "@/queries/account";
 import SetPinSheet from "@/components/bottomsheets/SetPinSheet";
 import InputPinSheet from "@/components/bottomsheets/InputPinSheet";
 import BackDrop from "@/components/bottomsheets/BackDrop";
-import { set } from "lodash";
-import ToastProvider from "@/context/ToastProvider";
 type Props = {};
 
 const Airtime = (props: Props) => {
@@ -152,6 +144,16 @@ const Airtime = (props: Props) => {
     inputPinRef.current?.close();
   };
   const openPinModal = () => {
+    if (Number(amount) > userAccount?.balance!) {
+      Toast.show({
+        type: "info",
+        text1: "Insufficient Balance",
+        text2: "Please top up to complete this transaction",
+        visibilityTime: 3000,
+        autoHide: true,
+      });
+      return;
+    }
     if (userAccount?.accountPinSet) {
       inputPinRef.current?.expand();
     } else {
@@ -193,14 +195,13 @@ const Airtime = (props: Props) => {
       phoneNumber: selectedPhone,
       serviceCategoryId: airtimeCategory?.id,
     };
-    console.log(airtimeDetails);
     setPurchaseLoading(true);
     try {
       const res = await billpaymentService.purchaseAirtime(airtimeDetails);
-      console.log(res.result);
       if (res.result) {
-        toggleModal();
         closeOpenModals();
+        toggleModal();
+        router.push("/(tabs)/transactions");
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -209,11 +210,8 @@ const Airtime = (props: Props) => {
             type: "error",
             text1: "Attention!!!",
             text2: error.response.data.message,
-            visibilityTime: 1000,
-            autoHide: true,
           });
-        }
-        if (
+        } else if (
           error.response?.status == 403 &&
           error.response.data.message == "User hasn't completed KYC"
         ) {
@@ -221,17 +219,12 @@ const Airtime = (props: Props) => {
             type: "info",
             text1: "Attention!!!",
             text2: "You Haven't Completed Your KYC",
-            visibilityTime: 1000,
-            autoHide: true,
           });
-        }
-        if (error.response) {
+        } else {
           Toast.show({
             type: "error",
             text1: "Attention!!!",
             text2: error.response?.data.Message || "Something went wrong",
-            visibilityTime: 1000,
-            autoHide: true,
           });
         }
       }
@@ -250,12 +243,10 @@ const Airtime = (props: Props) => {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View style={{ flex: 1 }}>
-        {/* <View className="z-50">
-          <Toast />
-        </View> */}
         <SafeAreaView
           style={{ flex: 1, padding: 16, backgroundColor: "white" }}
         >
+          <StatusBar barStyle={"dark-content"} />
           <DynamicHeader title="Airtime" />
           <View
             style={[
@@ -417,7 +408,7 @@ const Airtime = (props: Props) => {
             <SuccessPayment amount={amount} />
           </Modal>
         </SafeAreaView>
-        <Toast />
+        {/* <Toast /> */}
       </View>
     </TouchableWithoutFeedback>
   );

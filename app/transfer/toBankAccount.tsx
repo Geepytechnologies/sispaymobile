@@ -60,6 +60,7 @@ const ToBankAccount = (props: Props) => {
     setAccountFetching(true);
     try {
       const res = await walletService.NameEnquiry(bankCode, account);
+      console.log({ res: res });
       setUserAccountDetails({
         accountName: res.result.accountName,
         accountNumber: res.result.accountNumber,
@@ -122,11 +123,9 @@ const ToBankAccount = (props: Props) => {
       label: item.name,
       value: item.bankCode,
     }));
-  // console.log(data);
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <SafeAreaView style={{ flex: 1, padding: 16, backgroundColor: "white" }}>
-        <Toast />
         <DynamicHeader title="Transfer To Bank Account" />
         <View
           style={{ gap: 5 }}
@@ -172,7 +171,7 @@ const ToBankAccount = (props: Props) => {
           </View>
           <Text className="font-[500]">Recipient Account</Text>
           <TextInput
-            editable={!disabled}
+            // editable={!disabled}
             style={[disabled && { borderColor: "#22c55e", borderWidth: 1 }]}
             maxLength={10}
             value={accountNumber}
@@ -184,7 +183,7 @@ const ToBankAccount = (props: Props) => {
             <View style={[globalstyles.rowview, { gap: 10, marginTop: 20 }]}>
               <View
                 style={[{ backgroundColor: "rgba(3, 29, 66, 0.2)" }]}
-                className="flex items-center justify-center rounded-full h-[50px] w-[50px] 
+                className="flex items-center justify-center rounded-full h-[40px] w-[40px] 
             "
               >
                 <MaterialCommunityIcons
@@ -193,8 +192,13 @@ const ToBankAccount = (props: Props) => {
                   color={Colors.primary}
                 />
               </View>
-              <View>
-                <Text className="font-[500] text-base text-wrap">
+              <View className="max-w-[250px]">
+                <Text
+                  numberOfLines={2}
+                  ellipsizeMode="clip"
+                  style={{ flexShrink: 1 }}
+                  className="font-[500] text-base"
+                >
                   {userAccountDetails.accountName}
                 </Text>
                 <Text className="text-gray-500 text-sm">

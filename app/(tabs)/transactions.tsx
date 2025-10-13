@@ -16,31 +16,36 @@ import { Colors } from "@/constants/Colors";
 import SingleTransactionWidget from "@/components/common/SingleTransactionWidget";
 import { useFocusEffect } from "expo-router";
 import { useTransactions } from "@/queries/wallet";
+import { ref } from "joi";
+import TransactionDetails from "@/app/transactionDetail";
+import AnimatedLoader from "@/components/common/loader/AnimatedLoader";
+import RippleLoader from "@/components/common/loader/RippleLoader";
 
 type Props = {};
 
 const transactions = (props: Props) => {
   const { userAccount } = useUserStore();
-  // const accountNumber =
-  //   (userAccount && userAccount.accountNumber) || "8028434560";
-  const accountNumber = "8028434560"; // Default account number for testing
+  const accountNumber =
+    (userAccount && userAccount.accountNumber) || "8028434560";
+  // const accountNumber = "8028434560"; // Default account number for testing
   const startDate = "";
   const endDate = "";
-  const { isLoading, data: userTransactions } = useTransactions(
-    startDate,
-    endDate,
-    accountNumber,
-    1,
-    10
+  const {
+    isLoading,
+    data: userTransactions,
+    refetch,
+  } = useTransactions(startDate, endDate, accountNumber, 1, 10);
+  useFocusEffect(
+    useCallback(() => {
+      if (userTransactions) {
+        refetch();
+      }
+    }, [userTransactions, refetch])
   );
-  // useFocusEffect(() => {
-  //   useCallback(() => {
-  //     refetch();
-  //   }, []);
-  // });
-  console.log(userTransactions);
+
+  // console.log(userTransactions);
   return (
-    <SafeAreaView className="" style={{ flex: 1, padding: 16 }}>
+    <SafeAreaView className="px-4 pt-4 flex-1" style={{ flex: 1 }}>
       <DynamicHeader title="Transactions" />
       <View className="mt-5" style={[globalstyles.rowview]}>
         <TouchableOpacity
@@ -54,6 +59,7 @@ const transactions = (props: Props) => {
           <FontAwesome name="angle-down" size={24} color="black" />
         </TouchableOpacity>
       </View>
+      {isLoading && <RippleLoader />}
       {!isLoading && !userTransactions.result ? (
         <View className="my-5 flex-1 items-center justify-center">
           <Text className="text-[16px] text-gray-500">
@@ -61,17 +67,17 @@ const transactions = (props: Props) => {
           </Text>
         </View>
       ) : (
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          className="mt-5 flex-1"
-        >
-          <View className="">
+        <View className="flex-1 mt-5">
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ flexGrow: 1 }}
+          >
             {userTransactions &&
               userTransactions.result.map((t: any, index: any) => (
                 <SingleTransactionWidget key={index} transaction={t} />
               ))}
-          </View>
-        </ScrollView>
+          </ScrollView>
+        </View>
       )}
     </SafeAreaView>
   );

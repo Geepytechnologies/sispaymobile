@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Colors } from "@/constants/Colors";
 import { globalstyles } from "@/styles/common";
 import { useQuery } from "@tanstack/react-query";
@@ -21,6 +21,7 @@ import BottomSheet, {
 } from "@gorhom/bottom-sheet";
 import { ScreenDimensions } from "@/constants/Dimensions";
 import Toast, { BaseToast } from "react-native-toast-message";
+import { extractDays } from "@/utils/formatters";
 
 type Props = {
   phone: string | undefined;
@@ -56,10 +57,10 @@ const DataTopUPWidget = ({
   setHotDataDetails,
 }: Props) => {
   const [selectedDataCategoryOption, setSelectedDataCategoryOption] =
-    useState("Hot");
+    useState("Daily");
 
   const dataCategoryOptions = [
-    "Hot",
+    // "Awoof",
     "Daily",
     "2 Days",
     "Weekly",
@@ -82,8 +83,8 @@ const DataTopUPWidget = ({
 
   const plansToRender = () => {
     switch (selectedDataCategoryOption) {
-      case "Hot":
-        return HotPlans;
+      // case "Awoof":
+      //   return HotPlans;
       case "Daily":
         return dailyPlans;
       case "2 Days":
@@ -104,38 +105,52 @@ const DataTopUPWidget = ({
         return dailyPlans;
     }
   };
+  useEffect(() => {
+    plansToRender();
+  }, [selectedDataCategoryOption]);
 
-  const { isLoading, data } = useProductCategories(category);
+  const { fetchingProductCategory: isLoading, productCategories: data } =
+    useProductCategories({
+      id: category,
+    });
   const { isLoading: vtuDataLoading, data: vtuDataPlans } = useVtuDataPlans();
 
-  productCategories = data;
-  if (!isLoading && productCategories) {
+  if (!isLoading && data) {
+    const productCategories = data;
+
     dailyPlans = productCategories.filter(
-      (item: { validity: string }) => item.validity == "1 Day"
+      (item: { validity: string }) => extractDays(item.validity) === 1
     );
+
     twoDayPlan = productCategories.filter(
-      (item: { validity: string }) => item.validity === "2 Days"
+      (item: { validity: string }) => extractDays(item.validity) === 2
     );
+
     weeklyPlans = productCategories.filter(
-      (item: { validity: string }) => item.validity === "7 Days"
+      (item: { validity: string }) => extractDays(item.validity) === 7
     );
+
     monthlyplans = productCategories.filter(
-      (item: { validity: string }) =>
-        item.validity == "30 Days" || item.validity == "1 month"
+      (item: { validity: string }) => extractDays(item.validity) === 30
     );
+
     twoMonthPlan = productCategories.filter(
-      (item: { validity: string }) => item.validity === "2 Months"
+      (item: { validity: string }) => extractDays(item.validity) === 60
     );
+
     threeMonthPlan = productCategories.filter(
-      (item: { validity: string }) => item.validity === "3 Months"
+      (item: { validity: string }) => extractDays(item.validity) === 90
     );
+
     yearlyPlans = productCategories.filter(
-      (item: { planType: string }) => item.planType === "1 Year"
+      (item: { validity: string }) => extractDays(item.validity) === 365
     );
+
     twoYearPlans = productCategories.filter(
-      (item: { planType: string }) => item.planType === "2 Year"
+      (item: { validity: string }) => extractDays(item.validity) === 730
     );
   }
+
   if (!vtuDataLoading) {
     HotPlans = vtuDataPlans.filter(
       (item: { NETWORK: string }) => item.NETWORK == name
@@ -222,9 +237,6 @@ const DataTopUPWidget = ({
       showsVerticalScrollIndicator={false}
       className="shadow-sm rounded-[20px] bg-white p-4"
     >
-      <View style={{ zIndex: 40 }}>
-        <Toast />
-      </View>
       {/* scrolloptions */}
       <FlatList
         data={dataCategoryOptions}
@@ -261,15 +273,15 @@ const DataTopUPWidget = ({
           ))}
         </View>
       ) : (
-        <View className="flex flex-row flex-wrap my-5">
+        <View className="flex flex-row flex-wrap my-10">
           {plansToRender().map((item: any, index: any) => (
             <TouchableOpacity
               key={index}
               onPress={() => handleNormalData(item)}
               activeOpacity={0.7}
-              className="p-2 items-center justify-center w-1/3 h-[100px]"
+              className="p-2 items-center justify-center w-1/3 h-[150px]"
             >
-              <View className="rounded-md items-center justify-center w-full h-full  bg-[#e1e3ec]">
+              <View className="rounded-md items-center justify-center w-full h-full  bg-[#e1e3ec] p-1">
                 <Text className="text-center font-popp font-[700] text-md">
                   <Text>{item.bundleCode}</Text>
                 </Text>

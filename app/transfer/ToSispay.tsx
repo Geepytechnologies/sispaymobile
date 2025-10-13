@@ -54,7 +54,6 @@ const ToSispay = (props: Props) => {
         sessionId: res.result.sessionId,
         bankCode: res.result.bankCode,
       });
-      console.log(res.result);
     } catch (error) {
     } finally {
       setAccountFetching(false);
@@ -106,7 +105,6 @@ const ToSispay = (props: Props) => {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <SafeAreaView style={{ flex: 1, padding: 16, backgroundColor: "white" }}>
-        <Toast />
         <DynamicHeader title="Transfer To Sispay Account" />
         <View
           style={{ gap: 5 }}
@@ -132,8 +130,13 @@ const ToSispay = (props: Props) => {
               >
                 <Zocial name="persona" size={24} color={Colors.primary} />
               </View>
-              <View>
-                <Text className="font-[500] text-base">
+              <View className="max-w-[250px]">
+                <Text
+                  numberOfLines={2}
+                  ellipsizeMode="clip"
+                  style={{ flexShrink: 1 }}
+                  className="font-[500] text-base"
+                >
                   {userAccountDetails.accountName}
                 </Text>
                 <Text className="text-gray-500 text-sm">

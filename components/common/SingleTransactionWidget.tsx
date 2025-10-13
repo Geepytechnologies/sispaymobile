@@ -2,6 +2,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import React from "react";
 import {
   Feather,
+  FontAwesome6,
   MaterialCommunityIcons,
   MaterialIcons,
 } from "@expo/vector-icons";
@@ -19,10 +20,10 @@ export const getStatusColor = (status: string) => {
     status?.toLocaleLowerCase() == "completed" ||
     status?.toLocaleLowerCase() == "successful"
   ) {
-    return { bg: "bg-green-300", text: "text-green-600" };
+    return { bg: "bg-[#ddf7ed]", text: "text-[#1eb673]" };
   }
   if (status?.toLocaleLowerCase() == "true") {
-    return { bg: "bg-green-300", text: "text-green-600" };
+    return { bg: "bg-green-100", text: "text-green-600" };
   }
   if (
     status?.toLocaleLowerCase() == "pending" ||
@@ -53,7 +54,6 @@ const SingleTransactionWidget = ({ transaction }: Props) => {
     .find(([key, value]) => value !== null);
 
   TransactionType = nonNullProperty && nonNullProperty[0];
-  console.log(nonNullProperty);
 
   const getIconToRender = () => {
     if (
@@ -131,6 +131,17 @@ const SingleTransactionWidget = ({ transaction }: Props) => {
     return beneficiaryAccount === userAccount?.accountNumber;
   };
 
+  const ArrowSign = ({ account }: { account: string }) => {
+    return (
+      <View className="rotate-90 ml-2">
+        <FontAwesome6
+          name="arrow-right-arrow-left"
+          size={12}
+          color={isIncomingTransfer(account) ? "#1eb673" : "red"}
+        />
+      </View>
+    );
+  };
   const TransferTransactionView = () => (
     <View className="flex-1 gap-2" style={[globalstyles.rowview]}>
       <View className="flex-1" style={[globalstyles.rowview, { gap: 15 }]}>
@@ -145,38 +156,43 @@ const SingleTransactionWidget = ({ transaction }: Props) => {
         </View>
       </View>
       <View className="basis-[30%]" style={[globalstyles.colview, { gap: 4 }]}>
-        <Text
-          className={
-            isIncomingTransfer(
+        <View className="flex flex-row items-center">
+          <Text
+            className={
+              isIncomingTransfer(
+                transaction?.[TransactionType]?.beneficiaryAccountNumber
+              )
+                ? "text-[#1eb673]"
+                : "text-black"
+            }
+          >
+            {isIncomingTransfer(
               transaction?.[TransactionType]?.beneficiaryAccountNumber
             )
-              ? "text-green-700"
-              : "text-black"
-          }
-        >
-          {isIncomingTransfer(
-            transaction?.[TransactionType]?.beneficiaryAccountNumber
-          )
-            ? "+" +
-              "₦" +
-              transaction?.[TransactionType]?.amount?.toLocaleString()
-            : "-" +
-              "₦" +
-              transaction?.[TransactionType]?.amount?.toLocaleString()}
-        </Text>
+              ? "+" +
+                "₦" +
+                transaction?.[TransactionType]?.amount?.toLocaleString()
+              : "-" +
+                "₦" +
+                transaction?.[TransactionType]?.amount?.toLocaleString()}
+          </Text>
+          <ArrowSign
+            account={transaction?.[TransactionType]?.beneficiaryAccountNumber}
+          />
+        </View>
         <View
           className={`${
             getStatusColor(
               transaction?.[TransactionType]?.transferStatus?.toString()
             )?.bg
-          }  rounded-[10px] h-10 p-1 flex items-center justify-center`}
+          } px-[1px] rounded-[8px] py-[2px] flex items-center justify-center`}
         >
           <Text
             className={` ${
               getStatusColor(
                 transaction?.[TransactionType]?.transferStatus?.toString()
               )?.text
-            } capitalize text-sm px-4`}
+            } capitalize text-[10px] font-[500]`}
           >
             {transaction?.[TransactionType]?.transferStatus?.toString() ===
             "Completed"
@@ -202,34 +218,39 @@ const SingleTransactionWidget = ({ transaction }: Props) => {
         </View>
       </View>
       <View className="basis-[30%]" style={[globalstyles.colview, { gap: 4 }]}>
-        <Text
-          className={
-            isIncomingTransfer(
-              transaction?.[TransactionType]?.senderAccountNumber
+        <View className="flex flex-row items-center">
+          <Text
+            className={
+              isIncomingTransfer(
+                transaction?.[TransactionType]?.beneficiaryAccountNumber
+              )
+                ? "text-[#1eb673]"
+                : "text-black"
+            }
+          >
+            {isIncomingTransfer(
+              transaction?.[TransactionType]?.beneficiaryAccountNumber
             )
-              ? getStatusColor(transaction?.[TransactionType]?.status)?.text
-              : "text-black"
-          }
-        >
-          {isIncomingTransfer(
-            transaction?.[TransactionType]?.beneficiaryAccountNumber
-          )
-            ? "+" +
-              "₦" +
-              transaction?.[TransactionType]?.amount?.toLocaleString()
-            : "-" +
-              "₦" +
-              transaction?.[TransactionType]?.amount?.toLocaleString()}
-        </Text>
+              ? "+" +
+                "₦" +
+                transaction?.[TransactionType]?.amount?.toLocaleString()
+              : "-" +
+                "₦" +
+                transaction?.[TransactionType]?.amount?.toLocaleString()}
+          </Text>
+          <ArrowSign
+            account={transaction?.[TransactionType]?.beneficiaryAccountNumber}
+          />
+        </View>
         <View
           className={`${
             getStatusColor(transaction?.[TransactionType]?.status)?.bg
-          }  rounded-[10px] h-10 p-1 flex items-center justify-center`}
+          }  rounded-[8px] px-[1px] py-[2px] flex items-center justify-center`}
         >
           <Text
             className={` ${
               getStatusColor(transaction?.[TransactionType]?.status)?.text
-            } capitalize text-sm px-4`}
+            } capitalize text-[10px] font-[500] px-4`}
           >
             {transaction?.[TransactionType]?.status}
           </Text>

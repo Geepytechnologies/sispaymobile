@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Alert,
   ScrollView,
+  StatusBar,
 } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -33,6 +34,9 @@ import Auth from "@/utils/auth";
 import { useUserStore } from "@/config/store";
 import { useLastTwoTransactions } from "@/queries/wallet";
 import { useUserAccount as useAccountQuery } from "@/queries/account";
+import AnimatedLoader from "@/components/common/loader/AnimatedLoader";
+import Toast from "react-native-toast-message";
+import { copyToClipboard } from "@/utils/formatters";
 
 export default function HomeScreen() {
   const [balanceVisible, setBalancevisible] = useState(false);
@@ -55,17 +59,23 @@ export default function HomeScreen() {
   const accountNumber = userAccount && userAccount.accountNumber;
   const { data: userAccountData } = useAccountQuery();
   const { data: userTransactions } = useLastTwoTransactions(accountNumber);
-  useEffect(() => {
-    if (userAccountData) {
-      setUserAccount(userAccountData);
-    }
-  }, [userAccountData]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (userAccountData) {
+        setUserAccount(userAccountData);
+      }
+    }, [userAccountData])
+  );
+
   return (
     <SafeAreaView className="px-[14px] pt-[14px] flex-1">
+      <StatusBar barStyle={"light-content"} />
       <View className="h-screen">
         <ScrollView className="mb-20" showsVerticalScrollIndicator={false}>
           {/* header */}
           <ProfileHeader />
+
           {/* widget */}
           <View className="flex flex-row items-center justify-center mt-5 px-5 bg-appblue rounded-[20px] min-h-[120px]">
             <View className="flex flex-col gap-3">
@@ -98,9 +108,20 @@ export default function HomeScreen() {
                 <Text className="text-white items-center">₦</Text>
                 <Text className="text-[25px] font-[700] text-white">
                   {balanceVisible
-                    ? userAccount?.balance.toLocaleString() + ".00"
+                    ? userAccount?.balance.toFixed(2).toLocaleString()
                     : "*****"}
                 </Text>
+              </View>
+              <View className="flex flex-row items-center justify-center gap-2">
+                <Text className="text-white">{userAccount?.accountNumber}</Text>
+                <Ionicons
+                  onPress={() =>
+                    copyToClipboard(userAccount?.accountNumber as string)
+                  }
+                  name="copy-outline"
+                  size={16}
+                  color="white"
+                />
               </View>
               <TouchableOpacity
                 activeOpacity={0.8}

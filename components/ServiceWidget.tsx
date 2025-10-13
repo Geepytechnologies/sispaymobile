@@ -165,7 +165,7 @@ const ServiceWidget = (props: Props) => {
         {/* Electricity */}
         <TouchableOpacity
           activeOpacity={0.8}
-          onPress={() => router.push("/billpayment")}
+          onPress={() => router.push("/billpayment/electricity")}
           className="flex flex-col flex-1"
         >
           <View

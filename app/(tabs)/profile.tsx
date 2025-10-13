@@ -24,14 +24,18 @@ import {
   MaterialIcons,
 } from "@expo/vector-icons";
 import { Colors } from "@/constants/Colors";
-import { useAuth } from "@/utils/AuthProvider";
+import Auth from "@/utils/auth";
+import { useSession } from "@/context/SessionProvider";
 
 export default function TabTwoScreen() {
+  const { setToken, setRefreshToken } = Auth;
+  const { setSession } = useSession();
+
   const { user, clearUser } = useUserStore();
-  const { setAccessToken } = useAuth();
   const handleLogout = async () => {
-    await authService.Logout();
-    setAccessToken("");
+    setToken("");
+    setRefreshToken("");
+    setSession(false);
     clearUser();
     router.replace("/(auth)/Login");
   };

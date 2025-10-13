@@ -1,4 +1,5 @@
 import {
+  Alert,
   Button,
   FlatList,
   Image,
@@ -12,7 +13,7 @@ import {
   View,
 } from "react-native";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "expo-router";
+import { Link, router } from "expo-router";
 import {
   AntDesign,
   FontAwesome,
@@ -48,6 +49,8 @@ import axios from "axios";
 import Toast from "react-native-toast-message";
 import DataTopUPWidget from "@/components/billpayment/DataTopUPWidget";
 import DataTopUpDetailswidget from "@/components/billpayment/DataTopUpDetailswidget";
+import InputPinSheet from "@/components/bottomsheets/InputPinSheet";
+import SetPinSheet from "@/components/bottomsheets/SetPinSheet";
 
 type Props = {};
 
@@ -69,11 +72,11 @@ export const renderBackdrop = (props: any) => (
 const buydata = (props: Props) => {
   const { user, userAccount } = useUserStore();
   // const { contacts, getContacts } = useContacts();
-  const snapPoints = ["40%"];
+  const snapPoints = ["60%"];
   const [isModalVisible, setModalVisible] = useState(false);
   const [isContactsModalVisible, setIsContactsModalVisible] = useState(false);
   const [selectedPhone, setSelectedPhone] = useState<string | undefined>(
-    currentuser?.phoneNumber
+    user?.phoneNumber
   );
   const [phoneError, setPhoneError] = useState(!selectedPhone);
   const [successModal, setSuccessModal] = useState(false);
@@ -92,11 +95,14 @@ const buydata = (props: Props) => {
   const [DataCategory, setDataCategory] = useState<DataCategory | null>(null);
   const [contacts, setContacts] = useState<Contacts.Contact[]>([]);
   const [permissionGranted, setPermissionGranted] = useState(false);
+  const [pinValidationError, setPinValidationError] = useState(false);
 
   const bottomsheetRef = useRef<BottomSheet>(null);
   const contactsRef = useRef<BottomSheet>(null);
   const hotdataRef = useRef<BottomSheet>(null);
   const normaldataRef = useRef<BottomSheet>(null);
+  const inputPinRef = useRef<BottomSheet>(null);
+  const setPinRef = useRef<BottomSheet>(null);
 
   const toggleModal = () => {
     setSuccessModal(!successModal);
@@ -114,7 +120,6 @@ const buydata = (props: Props) => {
     const getContactsPermission = async () => {
       const { status } = await Contacts.requestPermissionsAsync();
       if (status === "granted") {
-        console.log(status);
         const { data } = await Contacts.getContactsAsync();
         const sortedContacts = [...data].sort((a: any, b: any) =>
           a?.firstName?.localeCompare(b?.firstName)
@@ -126,8 +131,12 @@ const buydata = (props: Props) => {
     getContactsPermission();
   }, []);
 
-  // console.log("datacat", DataCategory);
-
+  const closeOpenModals = () => {
+    normaldataRef.current?.close();
+    hotdataRef.current?.close();
+    inputPinRef.current?.close();
+    setPinRef.current?.close();
+  };
   const handlePhoneSelected = (item: Contacts.Contact) => {
     if (item.phoneNumbers) {
       setSelectedPhone(item.phoneNumbers[0].number);
@@ -183,8 +192,28 @@ const buydata = (props: Props) => {
     bottomsheetRef.current?.close();
     setDataCategory(item);
   };
-
-  const buyNormalData = async () => {
+  const openPinModal = () => {
+    const dataAmount = normalDataDetails.amount || hotDataDetails.amount;
+    if (Number(dataAmount) > userAccount?.balance!) {
+      Toast.show({
+        type: "info",
+        text1: "Insufficient Balance",
+        text2: "Please top up to complete this transaction",
+        visibilityTime: 3000,
+        autoHide: true,
+      });
+      return;
+    }
+    if (userAccount?.accountPinSet) {
+      inputPinRef.current?.expand();
+    } else {
+      setPinRef.current?.expand();
+    }
+  };
+  const handlePay = (pin: string) => {
+    buyNormalData(pin);
+  };
+  const buyNormalData = async (userPin: string) => {
     if (selectedPhone == undefined || selectedPhone == null) {
       Toast.show({
         type: "info",
@@ -204,23 +233,29 @@ const buydata = (props: Props) => {
       }
     }
     const dataDetails: PurchaseDataDTO = {
-      accountNumber: userAccount?.accountNumber,
+      accountPin: userPin,
       amount: Number(normalDataDetails.amount),
       bundleCode: normalDataDetails.bundleCode,
       phoneNumber: selectedPhone,
       serviceCategoryId: DataCategory?.id,
     };
-    console.log(dataDetails);
     setPurchaseLoading(true);
     try {
       const res = await billpaymentService.purchaseData(dataDetails);
-      console.log(res.result);
       if (res.result) {
+        closeOpenModals();
         toggleModal();
+        router.push("/(tabs)/transactions");
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        if (
+        if (error.response?.status == 400) {
+          Toast.show({
+            type: "error",
+            text1: "Attention!!!",
+            text2: error.response.data.message,
+          });
+        } else if (
           error.response?.status == 403 &&
           error.response.data.message == "User hasn't completed KYC"
         ) {
@@ -229,19 +264,19 @@ const buydata = (props: Props) => {
             text1: "Attention!!!",
             text2: "You Haven't Completed Your KYC",
           });
-        }
-        console.log(error.message);
-        if (error.response) {
-          console.log(error.response.data);
-          console.log(error.response.status);
-          console.log(error.response.headers);
+        } else {
+          Toast.show({
+            type: "error",
+            text1: "Attention!!!",
+            text2: error.response?.data.Message || "Something went wrong",
+          });
         }
       }
     } finally {
       setPurchaseLoading(false);
     }
   };
-  const buyHotData = async () => {
+  const buyHotData = async (userPin: string) => {
     if (selectedPhone == undefined || selectedPhone == null) {
       Toast.show({
         type: "info",
@@ -267,7 +302,6 @@ const buydata = (props: Props) => {
       phone: selectedPhone,
       network: DataCategory?.name,
     };
-    console.log(dataDetails);
     setPurchaseLoading(true);
     try {
       const res = await billpaymentService.PurchaseVTUData(dataDetails);
@@ -300,175 +334,201 @@ const buydata = (props: Props) => {
   };
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <SafeAreaView style={{ flex: 1, padding: 16, backgroundColor: "white" }}>
-        <Toast />
-        <DynamicHeader title="Data" />
-        <View
-          style={[
-            globalstyles.rowview,
-            { justifyContent: "space-between", marginVertical: 20 },
-          ]}
+      <View style={{ flex: 1 }}>
+        <SafeAreaView
+          style={{ flex: 1, padding: 16, backgroundColor: "white" }}
         >
-          <View style={[globalstyles.rowview, { gap: 15 }]}>
-            <TouchableOpacity
-              key={DataCategory && DataCategory.id}
-              style={[globalstyles.rowview, { gap: 4 }]}
-              onPress={() => showmodal()}
-            >
-              <Image
-                source={{ uri: DataCategory && DataCategory.logoUrl }}
-                style={{ height: 40, width: 40, objectFit: "cover" }}
-                className="rounded-full "
+          <DynamicHeader title="Data" />
+          <View
+            style={[
+              globalstyles.rowview,
+              { justifyContent: "space-between", marginVertical: 20 },
+            ]}
+          >
+            <View style={[globalstyles.rowview, { gap: 15 }]}>
+              <TouchableOpacity
+                key={DataCategory && DataCategory.id}
+                style={[globalstyles.rowview, { gap: 4 }]}
+                onPress={() => showmodal()}
+              >
+                <Image
+                  source={{ uri: DataCategory && DataCategory.logoUrl }}
+                  style={{ height: 40, width: 40, objectFit: "cover" }}
+                  className="rounded-full "
+                />
+                <FontAwesome6
+                  name="caret-up"
+                  size={18}
+                  color={Colors.primary}
+                />
+              </TouchableOpacity>
+              <TextInput
+                keyboardType="numeric"
+                placeholderTextColor={"black"}
+                placeholder={selectedPhone || "Recipient Phone"}
+                className="font-[700] text-[14px] font-popp  w-[200px]"
+                onChangeText={(text) => handlePhoneOnChange(text)}
+                value={selectedPhone}
+                maxLength={13}
               />
-              <FontAwesome6 name="caret-up" size={18} color={Colors.primary} />
-            </TouchableOpacity>
-            <TextInput
-              keyboardType="numeric"
-              placeholderTextColor={"black"}
-              placeholder={selectedPhone || "Recipient Phone"}
-              className="font-[700] text-[14px] font-popp  w-[200px]"
-              onChangeText={(text) => handlePhoneOnChange(text)}
-              value={selectedPhone}
-              maxLength={11}
+            </View>
+            <FontAwesome
+              onPress={showcontactsmodal}
+              name="user-circle"
+              size={24}
+              color={Colors.primary}
             />
           </View>
-          <FontAwesome
-            onPress={showcontactsmodal}
-            name="user-circle"
-            size={24}
-            color={Colors.primary}
-          />
-        </View>
-        {/* Error detail */}
-        {phoneError && (
-          <View style={{ gap: 8, marginBottom: 5 }}>
-            <View className="bg-red-300 w-full h-[1px]"></View>
-            <Text className="text-red-400 text-[12px]">
-              please enter the correct phone number
-            </Text>
-          </View>
-        )}
-        <DataTopUPWidget
-          phone={selectedPhone}
-          setPhoneError={setPhoneError}
-          setNormalDataDetails={setNormalDataDetails}
-          setHotDataDetails={setHotDataDetails}
-          shownormaldatamodal={shownormaldatamodal}
-          showhotdatamodal={showhotdatamodal}
-          name={DataCategory?.name}
-          category={DataCategory?.id}
-        />
-        {/* network options sheet */}
-        <BottomSheet
-          backdropComponent={renderBackdrop}
-          index={-1}
-          ref={bottomsheetRef}
-          snapPoints={snapPoints}
-        >
-          <BottomSheetView
-            style={{ maxHeight: ScreenDimensions.screenHeight * 0.7 }}
-          >
-            <View className="px-5 pt-9 justify-center h-full">
-              {!isLoading &&
-                dataCategories.map((item: any, index: any) => (
-                  <TouchableOpacity
-                    className="flex flex-row items-center justify-between mb-5 p-3 rounded-lg bg-[#d5d8e5]"
-                    key={item.id}
-                    onPress={() => handleDataCategory(item)}
-                  >
-                    <View className="flex flex-row items-center gap-3">
-                      <Image
-                        source={{ uri: item.logoUrl }}
-                        style={{ height: 40, width: 40, objectFit: "cover" }}
-                        className="rounded-full "
-                      />
-                      <Text>{item.name}</Text>
-                    </View>
-
-                    <MaterialCommunityIcons
-                      name={
-                        DataCategory && DataCategory.name == item.name
-                          ? "check-circle"
-                          : "checkbox-blank-circle-outline"
-                      }
-                      size={20}
-                      color={Colors.primary}
-                    />
-                  </TouchableOpacity>
-                ))}
-            </View>
-          </BottomSheetView>
-        </BottomSheet>
-
-        {/* contacts sheet */}
-        <BottomSheet
-          backdropComponent={renderBackdrop}
-          index={-1}
-          ref={contactsRef}
-          snapPoints={snapPoints}
-        >
-          <BottomSheetView
-            style={{ maxHeight: ScreenDimensions.screenHeight * 0.8 }}
-          >
-            <View style={{ padding: 20 }}>
-              <Text className="text-center text-appblue mb-4 text-lg">
-                Contacts
+          {/* Error detail */}
+          {phoneError && (
+            <View style={{ gap: 8, marginBottom: 5 }}>
+              <View className="bg-red-300 w-full h-[1px]"></View>
+              <Text className="text-red-400 text-[12px]">
+                please enter the correct phone number
               </Text>
-
-              <FlatList data={contacts} renderItem={renderContactItem} />
             </View>
-          </BottomSheetView>
-        </BottomSheet>
+          )}
+          <DataTopUPWidget
+            phone={selectedPhone}
+            setPhoneError={setPhoneError}
+            setNormalDataDetails={setNormalDataDetails}
+            setHotDataDetails={setHotDataDetails}
+            shownormaldatamodal={shownormaldatamodal}
+            showhotdatamodal={showhotdatamodal}
+            name={DataCategory?.name}
+            category={DataCategory?.id}
+          />
+          {/* network options sheet */}
+          <BottomSheet
+            backdropComponent={renderBackdrop}
+            index={-1}
+            ref={bottomsheetRef}
+            snapPoints={snapPoints}
+          >
+            <BottomSheetView
+              style={{ maxHeight: ScreenDimensions.screenHeight * 0.7 }}
+            >
+              <Text className="font-[500] text-center text-xl">
+                Choose your biller
+              </Text>
+              <View className="px-5 pt-9 justify-center h-full">
+                {!isLoading &&
+                  dataCategories.map((item: any, index: any) => (
+                    <TouchableOpacity
+                      className="flex flex-row items-center justify-between mb-5 p-3 rounded-lg bg-[#f8f8f8]"
+                      key={item.id}
+                      onPress={() => handleDataCategory(item)}
+                    >
+                      <View className="flex flex-row items-center gap-3">
+                        <Image
+                          source={{ uri: item.logoUrl }}
+                          style={{ height: 40, width: 40, objectFit: "cover" }}
+                          className="rounded-full "
+                        />
+                        <Text>{item.name}</Text>
+                      </View>
 
-        {/* hot data sheet */}
-        <BottomSheet
-          backdropComponent={renderBackdrop}
-          index={-1}
-          ref={hotdataRef}
-          snapPoints={["45%"]}
-        >
-          <BottomSheetView
-            style={{ maxHeight: ScreenDimensions.screenHeight * 0.6 }}
+                      <MaterialCommunityIcons
+                        name={
+                          DataCategory && DataCategory.name == item.name
+                            ? "check-circle"
+                            : "checkbox-blank-circle-outline"
+                        }
+                        size={20}
+                        color={Colors.primary}
+                      />
+                    </TouchableOpacity>
+                  ))}
+              </View>
+            </BottomSheetView>
+          </BottomSheet>
+
+          {/* contacts sheet */}
+          <BottomSheet
+            backdropComponent={renderBackdrop}
+            index={-1}
+            ref={contactsRef}
+            snapPoints={snapPoints}
           >
-            <DataTopUpDetailswidget
-              purchaseLoading={purchaseLoading}
-              buydata={buyHotData}
-              amount={hotDataDetails.amount}
-              logoUrl={DataCategory?.logoUrl}
-              productName={DataCategory?.name}
-            />
-          </BottomSheetView>
-        </BottomSheet>
-        {/* normal data sheet */}
-        <BottomSheet
-          backdropComponent={renderBackdrop}
-          index={-1}
-          ref={normaldataRef}
-          snapPoints={["45%"]}
-        >
-          <BottomSheetView
-            style={{ maxHeight: ScreenDimensions.screenHeight * 0.6 }}
+            <BottomSheetView
+              style={{ maxHeight: ScreenDimensions.screenHeight * 0.8 }}
+            >
+              <View style={{ padding: 20 }}>
+                <Text className="text-center text-appblue mb-4 text-lg">
+                  Contacts
+                </Text>
+
+                <FlatList data={contacts} renderItem={renderContactItem} />
+              </View>
+            </BottomSheetView>
+          </BottomSheet>
+
+          {/* hot data sheet */}
+          <BottomSheet
+            backdropComponent={renderBackdrop}
+            index={-1}
+            ref={hotdataRef}
+            snapPoints={["45%"]}
           >
-            <DataTopUpDetailswidget
-              purchaseLoading={purchaseLoading}
-              buydata={buyNormalData}
-              amount={normalDataDetails.amount}
-              logoUrl={DataCategory?.logoUrl}
-              productName={DataCategory?.name}
-            />
-          </BottomSheetView>
-        </BottomSheet>
-        <Modal
-          style={{ margin: 0 }}
-          onBackdropPress={toggleModal}
-          swipeDirection={["down"]}
-          onSwipeComplete={toggleModal}
-          propagateSwipe={true}
-          isVisible={successModal}
-        >
-          <SuccessPayment amount={amount} />
-        </Modal>
-      </SafeAreaView>
+            <BottomSheetView
+              style={{ maxHeight: ScreenDimensions.screenHeight * 0.6 }}
+            >
+              <DataTopUpDetailswidget
+                purchaseLoading={purchaseLoading}
+                buydata={openPinModal}
+                amount={hotDataDetails.amount}
+                logoUrl={DataCategory?.logoUrl}
+                productName={DataCategory?.name}
+                phoneNumber={selectedPhone as string}
+              />
+            </BottomSheetView>
+          </BottomSheet>
+          {/* normal data sheet */}
+          <BottomSheet
+            backdropComponent={renderBackdrop}
+            index={-1}
+            ref={normaldataRef}
+            snapPoints={["60%"]}
+          >
+            <BottomSheetView
+              style={{ maxHeight: ScreenDimensions.screenHeight * 0.6 }}
+            >
+              <DataTopUpDetailswidget
+                purchaseLoading={purchaseLoading}
+                buydata={openPinModal}
+                amount={normalDataDetails.amount}
+                logoUrl={DataCategory?.logoUrl}
+                productName={DataCategory?.name}
+                phoneNumber={selectedPhone as string}
+              />
+            </BottomSheetView>
+          </BottomSheet>
+          <Modal
+            style={{ margin: 0 }}
+            onBackdropPress={toggleModal}
+            swipeDirection={["down"]}
+            onSwipeComplete={toggleModal}
+            propagateSwipe={true}
+            isVisible={successModal}
+          >
+            <SuccessPayment amount={amount} />
+          </Modal>
+          {/* input pin sheet */}
+          <InputPinSheet
+            ref={inputPinRef}
+            isError={pinValidationError}
+            setIsError={setPinValidationError}
+            validatePin={handlePay}
+            validatingPin={purchaseLoading}
+          />
+          {/* set pin sheet */}
+          <SetPinSheet
+            ref={setPinRef}
+            paymentAction={handlePay}
+            processing={purchaseLoading}
+          />
+        </SafeAreaView>
+      </View>
     </TouchableWithoutFeedback>
   );
 };

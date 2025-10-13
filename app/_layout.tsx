@@ -42,8 +42,12 @@ import {
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "../global.css";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import Toast from "react-native-toast-message";
-import { View } from "react-native";
+import Toast, { BaseToast } from "react-native-toast-message";
+import { Image, View } from "react-native";
+import CustomToast from "@/components/common/CustomToast";
+import { ToastConfigParams } from "react-native-toast-message";
+import Auth from "@/utils/auth";
+import SessionProvider, { useSession } from "@/context/SessionProvider";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -51,12 +55,38 @@ SplashScreen.preventAutoHideAsync();
 export const unstable_settings = {
   ininitialRouteName: "(tabs)",
 };
+export const toastConfig = {
+  success: (props: ToastConfigParams<any>) => <CustomToast {...props} />,
+  error: (props: ToastConfigParams<any>) => <CustomToast {...props} />,
+  info: (props: ToastConfigParams<any>) => <CustomToast {...props} />,
+};
 export default function RootLayout() {
-  // Initialize app with enhanced auth system
-  // const { isInitialized, isAuthenticated, error } = useAppInitialization();
   const { expoPushToken } = usePushNotifications();
 
   const colorScheme = useColorScheme();
+  const queryClient = new QueryClient();
+  return (
+    <>
+      <SessionProvider>
+        <GestureHandlerRootView>
+          <SafeAreaProvider>
+            <QueryClientProvider client={queryClient}>
+              <ThemeProvider
+                value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+              >
+                <RootNavigator />
+              </ThemeProvider>
+            </QueryClientProvider>
+            <Toast position="top" config={toastConfig} />
+          </SafeAreaProvider>
+        </GestureHandlerRootView>
+      </SessionProvider>
+    </>
+  );
+}
+
+function RootNavigator() {
+  const { session, loading, userOnboarded } = useSession();
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
     Poppins_300Light,
@@ -74,67 +104,57 @@ export default function RootLayout() {
     Montserrat_700Bold,
   });
   useEffect(() => {
-    if (loaded) {
+    if (loaded && !loading) {
       SplashScreen.hideAsync();
     }
-  }, [loaded]);
+  }, [loaded, loading]);
 
-  if (!loaded) {
+  if (!loaded && loading) {
     return null;
   }
-
-  const queryClient = new QueryClient();
   return (
-    <GestureHandlerRootView>
-      <SafeAreaProvider>
-        <QueryClientProvider client={queryClient}>
-          <ThemeProvider
-            value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-          >
-            <Stack>
-              <Stack.Screen
-                name="(onboarding)"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="billpayment"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen name="contact" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="helpcenter"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen name="settings" options={{ headerShown: false }} />
-              <Stack.Screen name="withdraw" options={{ headerShown: false }} />
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="transactionDetails"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="transfer/ToSispay"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="transfer/toBankAccount"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="transfer/qrCodePage"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="transfer/cameraScreen"
-                options={{ headerShown: false }}
-              />
+    <Stack>
+      <Stack.Protected guard={!session}>
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      </Stack.Protected>
+      <Stack.Protected guard={!session && !userOnboarded}>
+        <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
+      </Stack.Protected>
+      <Stack.Protected guard={!!session}>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="billpayment" options={{ headerShown: false }} />
+        <Stack.Screen name="contact" options={{ headerShown: false }} />
+        <Stack.Screen name="helpcenter" options={{ headerShown: false }} />
+        <Stack.Screen name="settings" options={{ headerShown: false }} />
+        <Stack.Screen name="notifications" options={{ headerShown: false }} />
+        <Stack.Screen name="withdraw" options={{ headerShown: false }} />
 
-              <Stack.Screen name="+not-found" />
-            </Stack>
-          </ThemeProvider>
-        </QueryClientProvider>
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
+        <Stack.Screen
+          name="transactionDetail"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="transactionDetails"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="transfer/ToSispay"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="transfer/toBankAccount"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="transfer/qrCodePage"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="transfer/cameraScreen"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen name="+not-found" />
+      </Stack.Protected>
+    </Stack>
   );
 }

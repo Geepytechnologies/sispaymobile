@@ -1,3 +1,8 @@
+import {
+  IVerifyCableTvResponse,
+  IVerifyPowerResponse,
+} from "./responses/billpayment.interface";
+
 export type IErrors = {
   attemptedValue: string | null;
   customState: string | null;

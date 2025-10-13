@@ -50,7 +50,7 @@ const AirtimeTopUpwidget = ({
             key={index}
             className="p-2 items-center justify-center w-1/3 h-[80px]"
           >
-            <View className="rounded-md items-center justify-center w-full h-full  bg-[#e1e3ec]">
+            <View className="rounded-md items-center justify-center w-full h-full  bg-[#e8e8e8]">
               <Text className="text-center font-[500] text-md">
                 ₦<Text>{item.price}</Text>
               </Text>

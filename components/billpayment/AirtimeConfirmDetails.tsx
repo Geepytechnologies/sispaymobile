@@ -14,6 +14,14 @@ const AirtimeConfirmDetails = ({ amount, product, phoneNumber }: Props) => {
   const { userAccount } = useUserStore();
   return (
     <View>
+      <View className="flex w-full h-full absolute top-0 left-0">
+        <Image
+          source={require("@/assets/images/sispaylogo2.png")}
+          style={{ width: "100%", height: "100%" }}
+          resizeMode="contain"
+          className="opacity-10"
+        />
+      </View>
       <Text className="font-[600] self-center">
         ₦<Text className="text-[30px]">{amount}</Text>
       </Text>

@@ -92,7 +92,6 @@ const KycOtp = (props: Props) => {
         <SafeAreaView
           style={[globalstyles.centerview, { flex: 1, padding: 16 }]}
         >
-          <Toast />
           <DarkLogo width={200} />
           <Text className="font-inter text-center font-[700] text-[#000C20] text-[22px]">
             Let&apos;s Complete Your Verification

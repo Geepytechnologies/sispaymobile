@@ -16,6 +16,7 @@ import billpaymentService from "@/services/billpayment.service";
 import { globalstyles } from "@/styles/common";
 import {
   Feather,
+  FontAwesome,
   FontAwesome6,
   MaterialCommunityIcons,
 } from "@expo/vector-icons";
@@ -26,7 +27,14 @@ import { renderBackdrop } from "./buydata";
 import axios from "axios";
 import { PurchaseCableTvDTO } from "@/types/billpayment";
 import { Dropdown } from "react-native-element-dropdown";
-import { useBuyCableTv, useCableTvCategories } from "@/queries/billpayment";
+import {
+  useBuyCableTv,
+  useCableTvCategories,
+  useProductCategories,
+  useVerifyCableTv,
+} from "@/queries/billpayment";
+import { IVerifyCableTvDTO } from "@/interfaces/requests/billpayment.interface";
+import { useUserStore } from "@/config/store";
 
 type Props = {};
 interface ITvCategory {
@@ -36,12 +44,18 @@ interface ITvCategory {
   identifier: string;
 }
 const tv = (props: Props) => {
+  const { userAccount } = useUserStore();
   const [tvCategory, setTvCategory] = useState<ITvCategory | null>(null);
   const tvCategorySheetRef = useRef<BottomSheet>(null);
+  const [tvPackageData, setTvPackageData] = useState<
+    { label: string; value: any }[]
+  >([]);
+  const [tvVerified, setTvVerified] = useState(false);
   const [smartCardNumber, setSmartCardNumber] = useState("");
+  const [customerName, setCustomerName] = useState("");
   const [purchaseLoading, setPurchaseLoading] = useState(false);
   const [successModal, setSuccessModal] = useState(false);
-  const [productCategories, setProductCategories] = useState([]);
+  // const [productCategories, setProductCategories] = useState([]);
   const [tvInputDetails, setTvInputDetails] = useState({
     amount: "",
     bundleCode: "",
@@ -50,11 +64,23 @@ const tv = (props: Props) => {
   const [tvInputLabel, setTvInputLabel] = useState<any>();
   const [isFocus, setIsFocus] = useState(false);
 
+  const { verifyCableTv, verifyingCableTv } = useVerifyCableTv({
+    onSuccess: (value) => {
+      setCustomerName(value.result.name);
+      setTvVerified(true);
+    },
+  });
+  const handleVerifyTv = () => {
+    const data: IVerifyCableTvDTO = {
+      serviceCategoryId: tvCategory?.id as string,
+      entityNumber: smartCardNumber,
+    };
+    verifyCableTv(data);
+  };
   const { buyCableTv, buyCableTvLoading } = useBuyCableTv({
     onSuccess: (data) => {
       setSuccessModal(true);
       setPurchaseLoading(false);
-      refetch();
     },
     onError: (error) => {
       setPurchaseLoading(false);
@@ -69,23 +95,23 @@ const tv = (props: Props) => {
       setTvCategory(tvCategories[0]);
     }
   }, [tvCategories]);
-  const data = isLoading
-    ? []
-    : productCategories.map((item: any) => ({
-        label: item.name,
-        value: item,
-      }));
-  const getProductCategories = async () => {
-    try {
-      const res = await billpaymentService.getProductCategories(tvCategory?.id);
-      console.log("product categories", res);
-      setProductCategories(res);
-    } catch (error) {}
-  };
+  const { productCategories, fetchingProductCategory } = useProductCategories({
+    id: tvCategory?.id,
+  });
+  const data = productCategories.map((item: any) => ({
+    label: item.name,
+    value: item,
+  }));
   useEffect(() => {
-    getProductCategories();
-  }, [tvCategory]);
-
+    if (productCategories && productCategories.length > 0) {
+      setTvPackageData(
+        productCategories.map((item: any) => ({
+          label: item.name,
+          value: item,
+        }))
+      );
+    }
+  }, [productCategories]);
   const toggleModal = () => {
     setSuccessModal(!successModal);
   };
@@ -124,14 +150,13 @@ const tv = (props: Props) => {
       serviceCategoryId: tvCategory?.id,
       bundleCode: tvInputDetails.bundleCode,
       amount: Number(tvInputDetails.amount),
-      accountNumber: "",
+      accountNumber: userAccount?.accountNumber as string,
     };
     buyCableTv(tvDetails);
   };
   return (
-    <TouchableNativeFeedback onPress={Keyboard.dismiss}>
+    <TouchableNativeFeedback onPress={Keyboard.dismiss} accessible={false}>
       <SafeAreaView style={{ flex: 1, padding: 16 }}>
-        <Toast />
         <DynamicHeader title="Tv" />
         {/* Service Provider */}
         <View className="bg-white px-3 py-6 my-5 shadow-sm rounded-xl">
@@ -154,96 +179,121 @@ const tv = (props: Props) => {
         <View className="bg-white px-3 py-6 my-5 shadow-sm rounded-xl">
           <Text className="font-[500]">Smartcard Number</Text>
           <TextInput
+            keyboardType="numeric"
             value={smartCardNumber}
             onChangeText={(text) => setSmartCardNumber(text)}
             className="bg-gray-100 px-2 py-3 rounded-md mt-2"
             style={{}}
             placeholder="Enter Your Smartcard Number"
           />
-          {/* choose package */}
-          <View style={{ gap: 4 }} className="my-4">
-            {!isLoading && (
-              <View style={{}}>
-                <Text className="font-[500] mb-2">Package</Text>
-                <Dropdown
-                  style={[
-                    styles.dropdown,
-                    isFocus && { borderColor: Colors.primary },
-                  ]}
-                  placeholderStyle={styles.placeholderStyle}
-                  selectedTextStyle={styles.selectedTextStyle}
-                  inputSearchStyle={styles.inputSearchStyle}
-                  iconStyle={styles.iconStyle}
-                  data={data}
-                  search
-                  maxHeight={300}
-                  labelField="label"
-                  valueField="value"
-                  placeholder={!isFocus ? "Choose Package" : "..."}
-                  searchPlaceholder="Search..."
-                  value={"tvInputLabel"}
-                  onFocus={() => setIsFocus(true)}
-                  onBlur={() => setIsFocus(false)}
-                  onChange={(item) => {
-                    setTvInputLabel(item.value.name);
-                    handleTvPackage(item);
-                    setIsFocus(false);
-                  }}
-                  renderLeftIcon={() => (
-                    <Feather
-                      style={styles.icon}
-                      name="tv"
-                      size={20}
-                      color={isFocus ? Colors.primary : "black"}
-                    />
-                  )}
-                />
-              </View>
-            )}
-          </View>
-          {/* package */}
-          {tvInputLabel && (
-            <View className="my-4">
-              <Text className="font-[500]">Package</Text>
-              <Text className="bg-gray-100 text-gray-400 px-2 py-3 rounded-xl mt-2">
-                {tvInputLabel}
-              </Text>
+          {tvVerified && (
+            <View className="flex flex-row items-center gap-2 mt-2">
+              <FontAwesome name="user" size={24} color="black" />
+              <Text className="text-sm">{customerName}</Text>
             </View>
           )}
-          {/* Amount */}
-          {!isLoading && (
-            <View>
-              <Text className="font-[500]">Amount</Text>
-              <Text className="bg-gray-100 text-gray-400 px-2 py-3 rounded-xl mt-2">
-                ₦ {tvInputDetails.amount || "00.00"}
-              </Text>
+
+          {tvVerified && (
+            <View className="flex flex-col mt-4">
+              {/* choose package */}
+              <View style={{ gap: 4 }}>
+                {!isLoading && (
+                  <View style={{}}>
+                    <Text className="font-[500] mb-2">Package</Text>
+                    <Dropdown
+                      style={[
+                        styles.dropdown,
+                        isFocus && { borderColor: Colors.primary },
+                      ]}
+                      placeholderStyle={styles.placeholderStyle}
+                      selectedTextStyle={styles.selectedTextStyle}
+                      inputSearchStyle={styles.inputSearchStyle}
+                      iconStyle={styles.iconStyle}
+                      data={tvPackageData}
+                      search
+                      maxHeight={300}
+                      labelField="label"
+                      valueField="label"
+                      placeholder={!isFocus ? "Choose Package" : "..."}
+                      searchPlaceholder="Search..."
+                      value={tvInputLabel}
+                      onFocus={() => setIsFocus(true)}
+                      onBlur={() => setIsFocus(false)}
+                      onChange={(item) => {
+                        setTvInputLabel(item.value.name);
+                        handleTvPackage(item);
+                        setIsFocus(false);
+                      }}
+                      renderLeftIcon={() => (
+                        <Feather
+                          style={styles.icon}
+                          name="tv"
+                          size={20}
+                          color={isFocus ? Colors.primary : "black"}
+                        />
+                      )}
+                    />
+                  </View>
+                )}
+              </View>
+              <View className="my-4">
+                <Text className="font-[500]">Amount</Text>
+                <Text className="bg-gray-100 text-gray-400 px-2 py-3 rounded-xl mt-2">
+                  ₦ {tvInputDetails.amount || "00.00"}
+                </Text>
+              </View>
+              {/* package */}
+              {tvInputLabel && (
+                <View className="my-4">
+                  <Text className="font-[500]">Package</Text>
+                  <Text className="bg-gray-100 text-gray-400 px-2 py-3 rounded-xl mt-2">
+                    {tvInputLabel}
+                  </Text>
+                </View>
+              )}
             </View>
           )}
         </View>
-        <TouchableOpacity
-          onPress={handleCableTv}
-          className="bg-appblue rounded-xl py-4 mt-auto"
-          activeOpacity={0.8}
-        >
-          <Text className="text-white text-center text-xl font-[500]">
-            {purchaseLoading ? "Processing..." : "Pay"}
-          </Text>
-        </TouchableOpacity>
+        {!tvVerified ? (
+          <TouchableOpacity
+            onPress={handleVerifyTv}
+            className="bg-appblue rounded-xl py-4 mt-auto"
+            activeOpacity={0.8}
+          >
+            <Text className="text-white text-center text-sm font-[500]">
+              {verifyingCableTv ? "Processing..." : "Verify Smart Card Number"}
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            onPress={handleCableTv}
+            className="bg-appblue rounded-xl py-4 mt-auto"
+            activeOpacity={0.8}
+          >
+            <Text className="text-white text-center text-sm font-[500]">
+              {buyCableTvLoading ? "Processing..." : "Pay"}
+            </Text>
+          </TouchableOpacity>
+        )}
+
         {/* tv options sheet */}
         <BottomSheet
           backdropComponent={renderBackdrop}
           index={-1}
           ref={tvCategorySheetRef}
-          snapPoints={["40%"]}
+          snapPoints={["65%"]}
         >
           <BottomSheetView
             style={{ maxHeight: ScreenDimensions.screenHeight * 0.5 }}
           >
+            <Text className="font-[500] text-center text-xl">
+              Choose your provider
+            </Text>
             <View className="px-5 pt-9 justify-center h-full">
               {!isLoading &&
                 tvCategories.map((item: any, index: any) => (
                   <TouchableOpacity
-                    className="flex flex-row items-center justify-between mb-5 p-3 rounded-lg bg-[#d5d8e5]"
+                    className="flex flex-row items-center justify-between mb-5 p-3 rounded-lg bg-[#f8f8f8]"
                     key={item.id}
                     onPress={() => handleTvCategory(item)}
                   >

@@ -35,6 +35,7 @@ import Auth from "@/utils/auth";
 import { useUserStore } from "@/config/store";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { useSession } from "@/context/SessionProvider";
 
 type Props = {};
 
@@ -47,6 +48,7 @@ const Login = (props: Props) => {
   const axiosPrivate = useAxiosPrivate();
   const { setToken, setRefreshToken } = Auth;
   const { setUser } = useUserStore();
+  const { setSession } = useSession();
 
   const [formData, setFormData] = useState({ phone: "", password: "" });
 
@@ -83,6 +85,7 @@ const Login = (props: Props) => {
     };
     try {
       const res = await authService.signin(formdetails);
+      setSession(true);
       await setToken(res.result.accessToken);
       await setRefreshToken(res.result.refreshToken);
       setUser(res.result);
@@ -186,7 +189,6 @@ const Login = (props: Props) => {
       extraScrollHeight={60}
     >
       <View className="flex-1 justify-center">
-        <Toast />
         <View className="flex-1">
           <DarkLogo width={200} />
           <Text className="font-inter font-[700] text-[#000C20] text-[24px]">
