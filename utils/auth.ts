@@ -35,6 +35,10 @@ async function checkUserOnboarded() {
   const userOnboarded = await getFromStore("useronboarded");
   return userOnboarded ? JSON.parse(userOnboarded) : false;
 }
+async function getUserProfileSettings() {
+  const settings = await getFromStore("user-settings");
+  return settings ? JSON.parse(settings) : { biometric: false };
+}
 
 async function isAuthenticated() {
   try {
@@ -73,6 +77,7 @@ const Auth = {
   setRefreshToken,
   setToken,
   removeToken,
+  getUserProfileSettings,
 };
 
 export default Auth;

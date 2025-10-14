@@ -50,16 +50,16 @@ export default function TabTwoScreen() {
       icon: <MaterialIcons name="settings" size={24} color={Colors.primary} />,
       navigate: "settings",
     },
-    {
-      label: "Help Center",
-      icon: <Ionicons name="help-circle" size={24} color={Colors.primary} />,
-      navigate: "helpcenter",
-    },
-    {
-      label: "Contact",
-      icon: <FontAwesome name="phone" size={24} color={Colors.primary} />,
-      navigate: "contact",
-    },
+    // {
+    //   label: "Help Center",
+    //   icon: <Ionicons name="help-circle" size={24} color={Colors.primary} />,
+    //   navigate: "helpcenter",
+    // },
+    // {
+    //   label: "Contact",
+    //   icon: <FontAwesome name="phone" size={24} color={Colors.primary} />,
+    //   navigate: "contact",
+    // },
     {
       label: "Logout",
       icon: <Entypo name="log-out" size={24} color={Colors.primary} />,
