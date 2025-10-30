@@ -4,7 +4,9 @@ import * as SecureStore from "expo-secure-store";
 import authEndpoints from "@/api/auth";
 import axios from "axios";
 import {
+  BiometricLoginDTO,
   LoginDTO,
+  RegisterBiometricDTO,
   SendOtpDTO,
   TwoFactorAuthLoginDTO,
   VerifyOtpDTO,
@@ -12,6 +14,8 @@ import {
 import { CONSTANTS } from "@/constants";
 import { RegisterDTO } from "@/types/RegisterDTO";
 import { deleteFromStore } from "@/utils/localstorage";
+import { postRequest } from "@/utils/apiCaller";
+import { IRegisterBiometricResponse } from "@/interfaces/responses/auth.interface";
 
 interface TokenRefreshResponse {
   accessToken: string;
@@ -37,6 +41,70 @@ class AuthService {
         console.error("Unexpected error:", error);
       }
       throw error;
+    }
+  }
+  async biometricLogin(credentials: BiometricLoginDTO) {
+    try {
+      const response = await axios.post(
+        `${authEndpoints.biometriclogin}`,
+        credentials
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Biometric Login error:", error);
+      if (axios.isAxiosError(error)) {
+        console.error("Login error:", {
+          statusCode: error.response?.status,
+          message: error.message,
+          data: error.response?.data,
+        });
+      } else {
+        console.error("Unexpected error:", error);
+      }
+      throw error;
+    }
+  }
+  async registerBiometric(credentials: RegisterBiometricDTO) {
+    try {
+      const response = await postRequest<
+        RegisterBiometricDTO,
+        IRegisterBiometricResponse
+      >({
+        url: authEndpoints.registerBiometric,
+        payload: credentials,
+      });
+      return response;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error("Register Biometric error:", {
+          statusCode: error.response?.status,
+          message: error.message,
+          data: error.response?.data,
+        });
+      } else {
+        console.error("Unexpected error:", error);
+      }
+      throw error;
+    }
+  }
+  async refreshToken() {
+    try {
+      const accessToken = await this.getAccessToken();
+      const refreshToken = await this.getRefreshToken();
+
+      if (!accessToken || !refreshToken) {
+        return null;
+      }
+
+      const response = await axios.post(authEndpoints.refreshtoken, {
+        accessToken,
+        refreshToken,
+      });
+      console.log(response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Token refresh failed in _performTokenRefresh:", error);
+      return null;
     }
   }
   async TwoFactorAuthLogin(details: TwoFactorAuthLoginDTO) {

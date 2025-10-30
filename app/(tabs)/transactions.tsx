@@ -25,8 +25,7 @@ type Props = {};
 
 const transactions = (props: Props) => {
   const { userAccount } = useUserStore();
-  const accountNumber =
-    (userAccount && userAccount.accountNumber) || "8028434560";
+  const accountNumber = (userAccount && userAccount.accountNumber) as string;
   // const accountNumber = "8028434560"; // Default account number for testing
   const startDate = "";
   const endDate = "";
@@ -34,7 +33,7 @@ const transactions = (props: Props) => {
     isLoading,
     data: userTransactions,
     refetch,
-  } = useTransactions(startDate, endDate, accountNumber, 1, 10);
+  } = useTransactions(startDate, endDate, accountNumber, 1, 10, accountNumber);
   useFocusEffect(
     useCallback(() => {
       if (userTransactions) {

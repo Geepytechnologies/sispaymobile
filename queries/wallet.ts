@@ -16,7 +16,8 @@ export const useTransactions = (
   endDate: string,
   accountNumber: string,
   pageNumber: number,
-  pageSize: number
+  pageSize: number,
+  enabled: string
 ) => {
   return useQuery({
     queryKey: [
@@ -37,6 +38,7 @@ export const useTransactions = (
       ),
     refetchOnMount: true,
     staleTime: 0,
+    enabled: !!enabled,
   });
 };
 

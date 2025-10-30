@@ -43,11 +43,13 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "../global.css";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import Toast, { BaseToast } from "react-native-toast-message";
-import { Image, View } from "react-native";
+import { Image, StatusBar, View } from "react-native";
 import CustomToast from "@/components/common/CustomToast";
 import { ToastConfigParams } from "react-native-toast-message";
 import Auth from "@/utils/auth";
-import SessionProvider, { useSession } from "@/context/SessionProvider";
+import SessionProvider from "@/context/SessionProvider";
+import { useSession } from "@/context/SessionContext";
+import { Jura_600SemiBold, Jura_700Bold } from "@expo-google-fonts/jura";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -74,6 +76,7 @@ export default function RootLayout() {
               <ThemeProvider
                 value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
               >
+                <StatusBar barStyle={"dark-content"} />
                 <RootNavigator />
               </ThemeProvider>
             </QueryClientProvider>
@@ -102,6 +105,8 @@ function RootNavigator() {
     Montserrat_500Medium,
     Montserrat_600SemiBold,
     Montserrat_700Bold,
+    Jura_700Bold,
+    Jura_600SemiBold,
   });
   useEffect(() => {
     if (loaded && !loading) {
@@ -128,6 +133,7 @@ function RootNavigator() {
         <Stack.Screen name="settings" options={{ headerShown: false }} />
         <Stack.Screen name="notifications" options={{ headerShown: false }} />
         <Stack.Screen name="withdraw" options={{ headerShown: false }} />
+        <Stack.Screen name="personalinfo" options={{ headerShown: false }} />
 
         <Stack.Screen
           name="transactionDetail"

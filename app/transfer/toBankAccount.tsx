@@ -9,7 +9,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import DynamicHeader from "@/components/DynamicHeader";
 import { SafeAreaView } from "react-native-safe-area-context";
 import walletService from "@/services/wallet.service";
@@ -27,6 +27,10 @@ import Toast from "react-native-toast-message";
 import axios from "axios";
 import { Dropdown } from "react-native-element-dropdown";
 import { useBankLists } from "@/queries/wallet";
+import BottomSheet from "@gorhom/bottom-sheet";
+import InputPinSheet from "@/components/bottomsheets/InputPinSheet";
+import SetPinSheet from "@/components/bottomsheets/SetPinSheet";
+import { router } from "expo-router";
 
 type Props = {};
 
@@ -41,18 +45,44 @@ const ToBankAccount = (props: Props) => {
   const [transferLoading, setTransferLoading] = useState(false);
   const [bankCode, setBankCode] = useState<any>();
   const [isFocus, setIsFocus] = useState(false);
+  const [nameEnquiryError, setNameEnquiryError] = useState(false);
   const [userAccountDetails, setUserAccountDetails] = useState({
     accountName: "",
     accountNumber: "",
     sessionId: "",
     bankCode: "",
   });
-
+  const inputPinRef = useRef<BottomSheet>(null);
+  const setPinRef = useRef<BottomSheet>(null);
+  const [pinValidationError, setPinValidationError] = useState(false);
+  const openPinModal = () => {
+    if (Number(amount) > userAccount?.balance!) {
+      Toast.show({
+        type: "info",
+        text1: "Insufficient Balance",
+        text2: "Please top up to complete this transaction",
+        visibilityTime: 3000,
+        autoHide: true,
+      });
+      return;
+    }
+    if (userAccount?.accountPinSet) {
+      inputPinRef.current?.expand();
+    } else {
+      setPinRef.current?.expand();
+    }
+  };
   const handleAmount = (text: string) => {
-    const formattedText = parseInt(text).toLocaleString();
-    const numbertext = parseInt(text);
-    if (numbertext) {
-      setAmount(text);
+    if (text === "") {
+      setAmount("");
+      return;
+    }
+
+    const numericValue = parseInt(text.replace(/,/g, ""), 10);
+
+    if (!isNaN(numericValue)) {
+      const formatted = numericValue.toLocaleString();
+      setAmount(formatted);
     }
   };
 
@@ -60,28 +90,54 @@ const ToBankAccount = (props: Props) => {
     setAccountFetching(true);
     try {
       const res = await walletService.NameEnquiry(bankCode, account);
-      console.log({ res: res });
       setUserAccountDetails({
         accountName: res.result.accountName,
         accountNumber: res.result.accountNumber,
         sessionId: res.result.sessionId,
         bankCode: bankCode,
       });
-      console.log(res.result);
     } catch (error) {
+      setNameEnquiryError(true);
+
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status == 400) {
+          Toast.show({
+            type: "error",
+            text1: "Attention!!!",
+            text2: error.response.data.message,
+          });
+        } else if (
+          error.response?.status == 403 &&
+          error.response.data.message == "User hasn't completed KYC"
+        ) {
+          Toast.show({
+            type: "info",
+            text1: "Attention!!!",
+            text2: "You Haven't Completed Your KYC",
+          });
+        } else {
+          Toast.show({
+            type: "error",
+            text1: "Attention!!!",
+            text2: error.response?.data.Message || "Something went wrong",
+          });
+        }
+      }
     } finally {
       setAccountFetching(false);
     }
   };
   const handleAccountNumber = (text: string) => {
     setAccountNumber(text);
+    setNameEnquiryError(false);
+    setUserAccountDetails((prev) => ({ ...prev, accountName: "" }));
     if (text.length == 10) {
       setDisabled(true);
       fetchAcountdetails(text);
     }
   };
 
-  const handleTransfer = async () => {
+  const handleTransfer = async (pin: string) => {
     const transferData: TransferDTO = {
       saveBeneficiary: saveBeneficiary,
       nameEnquiryReference: userAccountDetails.sessionId,
@@ -90,6 +146,7 @@ const ToBankAccount = (props: Props) => {
       beneficiaryAccountNumber: userAccountDetails.accountNumber,
       beneficiaryBankCode: userAccountDetails.bankCode,
       narration: transferNarration,
+      accountPin: pin,
     };
     setTransferLoading(true);
     try {
@@ -100,6 +157,7 @@ const ToBankAccount = (props: Props) => {
           text1: "Success",
           text2: "Transfer Successful",
         });
+        router.push("/(tabs)/transactions");
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -109,13 +167,21 @@ const ToBankAccount = (props: Props) => {
             text1: "Alert",
             text2: error.response.data.message,
           });
+        } else {
+          Toast.show({
+            type: "error",
+            text1: "Attention!!!",
+            text2: error.response?.data.Message || "Something went wrong",
+          });
         }
       }
     } finally {
       setTransferLoading(false);
     }
   };
-
+  const handlePay = (pin: string) => {
+    handleTransfer(pin);
+  };
   const { isLoading, data: banklists } = useBankLists();
   const data =
     !isLoading &&
@@ -172,14 +238,17 @@ const ToBankAccount = (props: Props) => {
           <Text className="font-[500]">Recipient Account</Text>
           <TextInput
             // editable={!disabled}
-            style={[disabled && { borderColor: "#22c55e", borderWidth: 1 }]}
+            style={[
+              disabled && { borderColor: "#22c55e", borderWidth: 1 },
+              nameEnquiryError && { borderColor: "red", borderWidth: 1 },
+            ]}
             maxLength={10}
             value={accountNumber}
             onChangeText={(text) => handleAccountNumber(text)}
             placeholder="Account No."
             className="bg-gray-100 rounded-md p-3"
           />
-          {!accountFetching && (
+          {!accountFetching && userAccountDetails.accountName && (
             <View style={[globalstyles.rowview, { gap: 10, marginTop: 20 }]}>
               <View
                 style={[{ backgroundColor: "rgba(3, 29, 66, 0.2)" }]}
@@ -257,7 +326,7 @@ const ToBankAccount = (props: Props) => {
           </View>
           {/* submit */}
           <TouchableOpacity
-            onPress={handleTransfer}
+            onPress={() => openPinModal()}
             activeOpacity={0.8}
             disabled={transferLoading}
             className="bg-appblue text-gray-400 rounded-lg py-4"
@@ -271,6 +340,20 @@ const ToBankAccount = (props: Props) => {
             )}
           </TouchableOpacity>
         </View>
+        {/* input pin sheet */}
+        <InputPinSheet
+          ref={inputPinRef}
+          isError={pinValidationError}
+          setIsError={setPinValidationError}
+          validatePin={handlePay}
+          validatingPin={transferLoading}
+        />
+        {/* set pin sheet */}
+        <SetPinSheet
+          ref={setPinRef}
+          paymentAction={handlePay}
+          processing={transferLoading}
+        />
       </SafeAreaView>
     </TouchableWithoutFeedback>
   );

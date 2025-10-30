@@ -8,7 +8,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import DynamicHeader from "@/components/DynamicHeader";
 import { SafeAreaView } from "react-native-safe-area-context";
 import walletService from "@/services/wallet.service";
@@ -19,6 +19,10 @@ import { TransferDTO } from "@/types/AccountDTO";
 import { useUserStore } from "@/config/store";
 import Toast from "react-native-toast-message";
 import axios from "axios";
+import InputPinSheet from "@/components/bottomsheets/InputPinSheet";
+import SetPinSheet from "@/components/bottomsheets/SetPinSheet";
+import BottomSheet from "@gorhom/bottom-sheet";
+import { router } from "expo-router";
 
 type Props = {};
 
@@ -31,17 +35,46 @@ const ToSispay = (props: Props) => {
   const [disabled, setDisabled] = useState(false);
   const [accountFetching, setAccountFetching] = useState(true);
   const [transferLoading, setTransferLoading] = useState(false);
+  const [nameEnquiryError, setNameEnquiryError] = useState(false);
+
   const [userAccountDetails, setUserAccountDetails] = useState({
     accountName: "",
     accountNumber: "",
     sessionId: "",
     bankCode: "",
   });
-
+  const inputPinRef = useRef<BottomSheet>(null);
+  const setPinRef = useRef<BottomSheet>(null);
+  const [pinValidationError, setPinValidationError] = useState(false);
+  const openPinModal = () => {
+    if (Number(amount) > userAccount?.balance!) {
+      Toast.show({
+        type: "info",
+        text1: "Insufficient Balance",
+        text2: "Please top up to complete this transaction",
+        visibilityTime: 3000,
+        autoHide: true,
+      });
+      return;
+    }
+    if (userAccount?.accountPinSet) {
+      inputPinRef.current?.expand();
+    } else {
+      setPinRef.current?.expand();
+    }
+  };
   const handleAmount = (text: string) => {
-    const formattedText = parseInt(text).toLocaleString();
-    const numbertext = parseInt(text);
-    setAmount(text);
+    if (text === "") {
+      setAmount("");
+      return;
+    }
+
+    const numericValue = parseInt(text.replace(/,/g, ""), 10);
+
+    if (!isNaN(numericValue)) {
+      const formatted = numericValue.toLocaleString();
+      setAmount(formatted);
+    }
   };
 
   const fetchAcountdetails = async (account: string) => {
@@ -55,19 +88,47 @@ const ToSispay = (props: Props) => {
         bankCode: res.result.bankCode,
       });
     } catch (error) {
+      setNameEnquiryError(true);
+
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status == 400) {
+          Toast.show({
+            type: "error",
+            text1: "Attention!!!",
+            text2: error.response.data.message,
+          });
+        } else if (
+          error.response?.status == 403 &&
+          error.response.data.message == "User hasn't completed KYC"
+        ) {
+          Toast.show({
+            type: "info",
+            text1: "Attention!!!",
+            text2: "You Haven't Completed Your KYC",
+          });
+        } else {
+          Toast.show({
+            type: "error",
+            text1: "Attention!!!",
+            text2: error.response?.data.Message || "Something went wrong",
+          });
+        }
+      }
     } finally {
       setAccountFetching(false);
     }
   };
   const handleAccountNumber = (text: string) => {
     setAccountNumber(text);
+    setNameEnquiryError(false);
+    setUserAccountDetails((prev) => ({ ...prev, accountName: "" }));
     if (text.length == 10) {
       setDisabled(true);
       fetchAcountdetails(text);
     }
   };
 
-  const handleTransfer = async () => {
+  const handleTransfer = async (pin: string) => {
     const transferData: TransferDTO = {
       saveBeneficiary: saveBeneficiary,
       nameEnquiryReference: userAccountDetails.sessionId,
@@ -76,6 +137,7 @@ const ToSispay = (props: Props) => {
       beneficiaryAccountNumber: userAccountDetails.accountNumber,
       beneficiaryBankCode: userAccountDetails.bankCode,
       narration: transferNarration,
+      accountPin: pin,
     };
     setTransferLoading(true);
     try {
@@ -86,6 +148,7 @@ const ToSispay = (props: Props) => {
           text1: "Success",
           text2: "Transfer Successful",
         });
+        router.push("/(tabs)/transactions");
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -101,7 +164,9 @@ const ToSispay = (props: Props) => {
       setTransferLoading(false);
     }
   };
-
+  const handlePay = (pin: string) => {
+    handleTransfer(pin);
+  };
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <SafeAreaView style={{ flex: 1, padding: 16, backgroundColor: "white" }}>
@@ -113,7 +178,10 @@ const ToSispay = (props: Props) => {
           <Text className="font-[500]">Recipient Account</Text>
           <TextInput
             // editable={!disabled}
-            style={[disabled && { borderColor: "#22c55e", borderWidth: 1 }]}
+            style={[
+              disabled && { borderColor: "#22c55e", borderWidth: 1 },
+              nameEnquiryError && { borderColor: "red", borderWidth: 1 },
+            ]}
             maxLength={10}
             keyboardType="numeric"
             value={accountNumber}
@@ -121,7 +189,7 @@ const ToSispay = (props: Props) => {
             placeholder="SisPay Account No."
             className="bg-gray-100 rounded-md p-3"
           />
-          {!accountFetching && (
+          {!accountFetching && userAccountDetails.accountName && (
             <View style={[globalstyles.rowview, { gap: 10, marginTop: 20 }]}>
               <View
                 style={[{ backgroundColor: "rgba(3, 29, 66, 0.2)" }]}
@@ -195,20 +263,29 @@ const ToSispay = (props: Props) => {
           </View>
           {/* submit */}
           <TouchableOpacity
-            onPress={handleTransfer}
+            onPress={() => openPinModal()}
             activeOpacity={0.8}
-            disabled={transferLoading}
             className="bg-appblue rounded-lg py-4"
           >
-            {!transferLoading ? (
-              <Text className="text-white font-popp text-lg text-center font-[600]">
-                Transfer
-              </Text>
-            ) : (
-              <ActivityIndicator size={"small"} className="" />
-            )}
+            <Text className="text-white font-popp text-lg text-center font-[600]">
+              Transfer
+            </Text>
           </TouchableOpacity>
         </View>
+        {/* input pin sheet */}
+        <InputPinSheet
+          ref={inputPinRef}
+          isError={pinValidationError}
+          setIsError={setPinValidationError}
+          validatePin={handlePay}
+          validatingPin={transferLoading}
+        />
+        {/* set pin sheet */}
+        <SetPinSheet
+          ref={setPinRef}
+          paymentAction={handlePay}
+          processing={transferLoading}
+        />
       </SafeAreaView>
     </TouchableWithoutFeedback>
   );

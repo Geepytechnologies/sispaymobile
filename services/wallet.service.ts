@@ -1,5 +1,6 @@
 import { CONSTANTS } from "@/constants";
 import { TransferDTO } from "@/types/AccountDTO";
+import Api from "@/utils/Api";
 import axios, { AxiosInstance } from "axios";
 
 class WalletService {
@@ -11,7 +12,7 @@ class WalletService {
     pageSize: number
   ) {
     try {
-      const response = await axios.get(
+      const response = await Api.get(
         `${CONSTANTS.APIURL}/Transaction/GetAllTransactions?startDate=${startDate}&endDate=${endDate}&accountNumber=${accountNumber}&pageNumber=${pageNumber}&pageSize=${pageSize}`
       );
       return response.data;
@@ -22,7 +23,7 @@ class WalletService {
   }
   async getATransaction(id: string | string[] | undefined) {
     try {
-      const response = await axios.get(
+      const response = await Api.get(
         `${CONSTANTS.APIURL}/Transaction/GetATransaction/${id}`
       );
       return response.data.result;
@@ -35,7 +36,7 @@ class WalletService {
   async getLastTwoTransactions(accountNumber: string | null) {
     console.log("accountNumber: ", accountNumber);
     try {
-      const response = await axios.get(
+      const response = await Api.get(
         `${
           CONSTANTS.APIURL
         }/Transaction/GetAllTransactions?accountNumber=${"8028434560"}&pageNumber=1&pageSize=${2}`
@@ -49,7 +50,7 @@ class WalletService {
 
   async SisPayNameEnquiry(accountNo: string) {
     try {
-      const response = await axios.post(
+      const response = await Api.post(
         `${CONSTANTS.APIURL}/Wallet/transfer/name_enquiry`,
         { bankCode: "090286", accountNumber: accountNo }
       );
@@ -61,7 +62,7 @@ class WalletService {
   }
   async NameEnquiry(bankCode: string, accountNo: string) {
     try {
-      const response = await axios.post(
+      const response = await Api.post(
         `${CONSTANTS.APIURL}/Wallet/transfer/name_enquiry`,
         { bankCode: bankCode, accountNumber: accountNo }
       );
@@ -73,7 +74,7 @@ class WalletService {
   }
   async MakeTransfer(details: TransferDTO) {
     try {
-      const response = await axios.post(
+      const response = await Api.post(
         `${CONSTANTS.APIURL}/Wallet/transfer`,
         details
       );

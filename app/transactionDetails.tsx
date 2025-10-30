@@ -266,7 +266,7 @@ const transactionDetails = (props: Props) => {
                   <Text className="text-gray-500 justify-between font-popp">
                     Recipient
                   </Text>
-                  <Text className="font-[500] font-popp">
+                  <Text className="font-[500] text-right font-popp break-words flex-1">
                     {userTransaction[0][transactionType].beneficiaryAccountName}
                   </Text>
                 </View>

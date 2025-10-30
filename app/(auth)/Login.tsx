@@ -11,9 +11,10 @@ import {
 import React, { useState } from "react";
 import DarkLogo from "@/components/common/DarkLogo";
 import PrimaryButton from "@/components/common/PrimaryButton";
-import { Feather } from "@expo/vector-icons";
+import { Feather, Ionicons } from "@expo/vector-icons";
 import { Link, router } from "expo-router";
 import { Controller, useForm } from "react-hook-form";
+import * as LocalAuthentication from "expo-local-authentication";
 import { loginSchema } from "@/validation/authValidation";
 import { joiResolver } from "@hookform/resolvers/joi";
 import { LoginDTO, SendOtpDTO } from "@/types/LoginDTO";
@@ -23,7 +24,7 @@ import { formatPhoneNumber } from "@/utils/formatters";
 import { Platform } from "react-native";
 import { ScrollView } from "react-native";
 import Toast from "react-native-toast-message";
-import { addToStore } from "@/utils/localstorage";
+import { addToStore, getFromStore } from "@/utils/localstorage";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import axios from "axios";
 import { useAuth } from "@/utils/AuthProvider";
@@ -35,7 +36,10 @@ import Auth from "@/utils/auth";
 import { useUserStore } from "@/config/store";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { useSession } from "@/context/SessionProvider";
+import { useSession } from "@/context/SessionContext";
+import { StatusBar } from "expo-status-bar";
+import { useBiometricStatus } from "@/hooks/useBiometricStatus";
+import { getDeviceFingerprint } from "@/utils/device";
 
 type Props = {};
 
@@ -48,7 +52,9 @@ const Login = (props: Props) => {
   const axiosPrivate = useAxiosPrivate();
   const { setToken, setRefreshToken } = Auth;
   const { setUser } = useUserStore();
-  const { setSession } = useSession();
+  const { setSession, userSettings } = useSession();
+  const { isAuthenticated } = Auth;
+  const { hasHardware, isEnrolled } = useBiometricStatus();
 
   const [formData, setFormData] = useState({ phone: "", password: "" });
 
@@ -58,6 +64,48 @@ const Login = (props: Props) => {
   const togglePassword = () => {
     setPasswordvisible(!passwordvisible);
   };
+
+  const handleBiometricAuth = async () => {
+    try {
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: "Login with biometric",
+        fallbackLabel: "Use password instead",
+      });
+
+      if (!result.success) return;
+
+      const fingerprint = await getDeviceFingerprint();
+      const res = await authService.biometricLogin({
+        fingerprint: fingerprint,
+        pushtoken: expoPushToken || "none",
+        deviceDetails: {
+          deviceId: deviceinfo.deviceId,
+          model: deviceinfo.model,
+          manufacturer: deviceinfo.manufacturer,
+        },
+      });
+
+      await setToken(res.result.accessToken);
+      await setRefreshToken(res.result.refreshToken);
+      setAccessToken(res.result.accessToken);
+      setUser(res.result);
+      setSession(true);
+
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Welcome back!",
+        position: "top",
+      });
+
+      router.push("/(tabs)");
+    } catch (error: any) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const {
     control,
     handleSubmit,
@@ -90,6 +138,10 @@ const Login = (props: Props) => {
       await setRefreshToken(res.result.refreshToken);
       setUser(res.result);
       setAccessToken(res.result.accessToken);
+
+      // Store credentials securely for biometric login
+      await addToStore("lastLoginPhone", data.phone);
+      await addToStore("lastLoginPassword", data.password);
 
       Toast.show({
         type: "success",
@@ -188,6 +240,8 @@ const Login = (props: Props) => {
       enableOnAndroid={true}
       extraScrollHeight={60}
     >
+      <StatusBar style="light" />
+
       <View className="flex-1 justify-center">
         <View className="flex-1">
           <DarkLogo width={200} />
@@ -224,6 +278,7 @@ const Login = (props: Props) => {
                       onBlur={onBlur}
                       onChangeText={onChange}
                       value={value}
+                      maxLength={11}
                       placeholder="08012355312"
                       placeholderTextColor={"#A1A1A1"}
                       keyboardType="numeric"
@@ -267,6 +322,7 @@ const Login = (props: Props) => {
                       onBlur={onBlur}
                       onChangeText={onChange}
                       value={value}
+                      maxLength={6}
                       placeholder="112233"
                       placeholderTextColor={"#A1A1A1"}
                       keyboardType="numeric"
@@ -294,18 +350,33 @@ const Login = (props: Props) => {
                   </Text>
                 )}
             </View>
-            <TouchableOpacity
-              onPress={handleSubmit(onSubmit)}
-              disabled={loading}
-              className="mt-[28px] mb-[22px] w-full"
-              activeOpacity={0.8}
-            >
-              <PrimaryButton
-                loaderSize={20}
-                loading={loading}
-                text={"Continue"}
-              />
-            </TouchableOpacity>
+            <View className="flex flex-row items-center gap-2">
+              <TouchableOpacity
+                onPress={handleSubmit(onSubmit)}
+                disabled={loading}
+                className="mt-[28px] mb-[22px] flex-1"
+                activeOpacity={0.8}
+              >
+                <PrimaryButton
+                  loaderSize={20}
+                  loading={loading}
+                  text={"Continue"}
+                />
+              </TouchableOpacity>
+              {hasHardware && isEnrolled && userSettings?.biometric && (
+                <TouchableOpacity
+                  onPress={handleBiometricAuth}
+                  disabled={loading}
+                >
+                  <Ionicons
+                    name="finger-print-outline"
+                    size={40}
+                    color={loading ? "#A1A1A1" : "black"}
+                  />
+                </TouchableOpacity>
+              )}
+            </View>
+
             <Text className="text-[#A1A1A1]font-inter text-[13px] font-[500] text-center">
               Don&apos;t have an account?
               <Link

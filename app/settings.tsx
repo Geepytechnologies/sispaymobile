@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import DynamicHeader from "@/components/DynamicHeader";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FontAwesome5, FontAwesome6 } from "@expo/vector-icons";
-import { useSession } from "@/context/SessionProvider";
+import { useSession } from "@/context/SessionContext";
 
 type Props = {};
 

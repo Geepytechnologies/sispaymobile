@@ -25,7 +25,7 @@ import {
 } from "@expo/vector-icons";
 import { Colors } from "@/constants/Colors";
 import Auth from "@/utils/auth";
-import { useSession } from "@/context/SessionProvider";
+import { useSession } from "@/context/SessionContext";
 
 export default function TabTwoScreen() {
   const { setToken, setRefreshToken } = Auth;
@@ -43,7 +43,7 @@ export default function TabTwoScreen() {
     {
       label: "My Account",
       icon: <FontAwesome5 name="user-alt" size={24} color={Colors.primary} />,
-      navigate: "(tabs)/",
+      navigate: "personalinfo",
     },
     {
       label: "Settings",

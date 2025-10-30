@@ -1,38 +1,45 @@
 import { AppState, AppStateStatus } from "react-native";
-import { useEffect, useRef } from "react";
 import * as LocalAuthentication from "expo-local-authentication";
 import authService from "./auth.service";
 import { useUserStore } from "@/config/store";
 import { router } from "expo-router";
+import Auth from "@/utils/auth";
+import { restoreUserStore } from "@/config/useStoreHelpers";
 
 interface AppStateConfig {
-  backgroundLogoutDelay: number; // milliseconds
+  backgroundLogoutDelay: number; // ms
   requireBiometricOnResume: boolean;
-  inactivityLockThreshold: number; // milliseconds
+  inactivityLockThreshold: number; // ms
 }
 
 const DEFAULT_CONFIG: AppStateConfig = {
-  backgroundLogoutDelay: 0, // Immediate logout for fintech
+  backgroundLogoutDelay: 0, // logout immediately when backgrounded
   requireBiometricOnResume: true,
-  inactivityLockThreshold: 2 * 60 * 1000, // 2 minutes
+  inactivityLockThreshold: 2 * 60 * 1000, // 2 min
 };
 
 class AppStateService {
   private lastBackgroundAt: number | null = null;
   private backgroundTimeout: NodeJS.Timeout | null = null;
   private config: AppStateConfig = DEFAULT_CONFIG;
+  private initialized = false;
 
   constructor(config?: Partial<AppStateConfig>) {
     this.config = { ...DEFAULT_CONFIG, ...config };
   }
 
-  // Initialize app state monitoring
   initialize() {
-    const subscription = AppState.addEventListener(
-      "change",
-      this.handleAppStateChange.bind(this)
-    );
-    return () => subscription.remove();
+    if (this.initialized) return;
+    this.initialized = true;
+
+    const subscription = AppState.addEventListener("change", async (state) => {
+      await this.handleAppStateChange(state);
+    });
+
+    return () => {
+      subscription.remove();
+      this.initialized = false;
+    };
   }
 
   private async handleAppStateChange(nextState: AppStateStatus) {
@@ -43,8 +50,7 @@ class AppStateService {
       case "active":
         await this.handleForeground();
         break;
-      case "inactive":
-        // App is transitioning between foreground and background
+      default:
         break;
     }
   }
@@ -52,11 +58,10 @@ class AppStateService {
   private async handleBackground() {
     this.lastBackgroundAt = Date.now();
 
-    // For fintech apps, logout immediately when going to background
+    // fintech: logout immediately (secure)
     if (this.config.backgroundLogoutDelay === 0) {
       await this.logoutUser();
     } else {
-      // Set timeout for delayed logout
       this.backgroundTimeout = setTimeout(async () => {
         await this.logoutUser();
       }, this.config.backgroundLogoutDelay);
@@ -64,34 +69,37 @@ class AppStateService {
   }
 
   private async handleForeground() {
-    // Clear any pending logout
     if (this.backgroundTimeout) {
       clearTimeout(this.backgroundTimeout);
       this.backgroundTimeout = null;
     }
 
-    // Check if user was inactive for too long
+    // if user was away too long, re-authenticate
     if (this.lastBackgroundAt && this.config.requireBiometricOnResume) {
-      const wasInactiveMs = Date.now() - this.lastBackgroundAt;
-
-      if (wasInactiveMs > this.config.inactivityLockThreshold) {
+      const inactiveFor = Date.now() - this.lastBackgroundAt;
+      if (inactiveFor > this.config.inactivityLockThreshold) {
         await this.requireBiometricAuth();
       }
     }
 
-    // Proactive token refresh on resume
+    // refresh token only when app is active
     await this.refreshTokenIfNeeded();
   }
 
   private async requireBiometricAuth() {
+    const { getUserProfileSettings } = Auth;
     try {
       const hasHardware = await LocalAuthentication.hasHardwareAsync();
       const supported =
         await LocalAuthentication.supportedAuthenticationTypesAsync();
-
+      const userSettings = await getUserProfileSettings();
+      console.log(userSettings);
+      // if (!userSettings?.biometricEnabled) {
+      //   router.push("/(auth)/Login");
+      // }
       if (hasHardware && supported.length > 0) {
         const result = await LocalAuthentication.authenticateAsync({
-          promptMessage: "Verify your identity to continue",
+          promptMessage: "Verify to continue",
           cancelLabel: "Cancel",
           disableDeviceFallback: false,
         });
@@ -99,12 +107,10 @@ class AppStateService {
         if (!result.success) {
           await this.logoutUser();
         }
-      } else {
-        // No biometric available, logout for security
-        await this.logoutUser();
+        await restoreUserStore();
       }
-    } catch (error) {
-      console.error("Biometric authentication failed:", error);
+    } catch (err) {
+      console.error("Biometric auth failed:", err);
       await this.logoutUser();
     }
   }
@@ -115,16 +121,18 @@ class AppStateService {
       if (!user) return;
 
       const isExpiringSoon = await authService.isTokenExpiringSoon(
-        user.accessToken
+        user.accessToken,
+        120 // 2 minutes threshold
       );
+
       if (isExpiringSoon) {
         const refreshed = await authService.refreshAccessToken();
         if (!refreshed) {
           await this.logoutUser();
         }
       }
-    } catch (error) {
-      console.error("Token refresh failed in refreshTokenIfNeeded:", error);
+    } catch (err) {
+      console.error("Token refresh failed:", err);
       await this.logoutUser();
     }
   }
@@ -135,19 +143,13 @@ class AppStateService {
       const { clearUser } = useUserStore.getState();
       clearUser();
       router.replace("/(auth)/Login");
-    } catch (error) {
-      console.error("Logout failed:", error);
+    } catch (err) {
+      console.error("Logout failed:", err);
     }
   }
 
-  // Update configuration
-  updateConfig(newConfig: Partial<AppStateConfig>) {
-    this.config = { ...this.config, ...newConfig };
-  }
-
-  // Manual logout
-  async logout() {
-    await this.logoutUser();
+  updateConfig(config: Partial<AppStateConfig>) {
+    this.config = { ...this.config, ...config };
   }
 }
 

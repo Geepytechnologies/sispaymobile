@@ -9,6 +9,19 @@ export interface LoginDTO {
   };
 }
 
+export interface BiometricLoginDTO {
+  fingerprint: string;
+  pushtoken: string | null;
+  deviceDetails: {
+    deviceId: string | null;
+    model: string | null;
+    manufacturer: string | null;
+  };
+}
+export interface RegisterBiometricDTO {
+  fingerprint: string;
+}
+
 export interface TwoFactorAuthLoginDTO {
   pinId: string | null;
   otp: string | null;

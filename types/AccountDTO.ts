@@ -31,4 +31,5 @@ export interface TransferDTO {
   beneficiaryAccountNumber: string;
   amount: number | undefined | "";
   narration: string;
+  accountPin: string;
 }
